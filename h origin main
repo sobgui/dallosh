@@ -1,1419 +1,0 @@
-[33m8374373[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmaster[m[33m)[m Fix: Add missing src/lib folders and fix .gitignore to not exclude project lib folders
-[1mdiff --git a/.gitignore b/.gitignore[m
-[1mindex 612f1f9..8293103 100644[m
-[1m--- a/.gitignore[m
-[1m+++ b/.gitignore[m
-[36m@@ -42,8 +42,9 @@[m [mdist/[m
- downloads/[m
- eggs/[m
- .eggs/[m
-[31m-lib/[m
-[31m-lib64/[m
-[32m+[m[32m# System libraries (but not project src/lib folders)[m
-[32m+[m[32m/lib/[m
-[32m+[m[32m/lib64/[m
- parts/[m
- sdist/[m
- var/[m
-[1mdiff --git a/GITIGNORE_STRUCTURE.md b/GITIGNORE_STRUCTURE.md[m
-[1mindex e5bceed..537865d 100644[m
-[1m--- a/GITIGNORE_STRUCTURE.md[m
-[1m+++ b/GITIGNORE_STRUCTURE.md[m
-[36m@@ -155,3 +155,5 @@[m [mgit add . && git status --porcelain[m
- - `.env.example` files are typically committed to provide template configurations[m
- - Some directories may have permission issues (like `sodular/servers/sodular_mongodb/data/`)[m
- - The `.gitignore` files are committed to version control to ensure all developers use the same exclusions[m
-[41m+[m
-[41m+[m
-[1mdiff --git a/README.md b/README.md[m
-[1mindex a9e52bd..0a057b5 100644[m
-[1m--- a/README.md[m
-[1m+++ b/README.md[m
-[36m@@ -299,3 +299,5 @@[m [mFor support and questions:[m
- ---[m
- [m
- **Dallosh** - Empowering enterprises with intelligent conversational AI 🚀[m
-[41m+[m
-[41m+[m
-[1mdiff --git a/dallosh/.gitignore b/dallosh/.gitignore[m
-[1mindex 9ee4e77..96b1b6b 100644[m
-[1m--- a/dallosh/.gitignore[m
-[1m+++ b/dallosh/.gitignore[m
-[36m@@ -42,8 +42,9 @@[m [mdist/[m
- downloads/[m
- eggs/[m
- .eggs/[m
-[31m-lib/[m
-[31m-lib64/[m
-[32m+[m[32m# System libraries (but not project src/lib folders)[m
-[32m+[m[32m/lib/[m
-[32m+[m[32m/lib64/[m
- parts/[m
- sdist/[m
- var/[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/database/utils/index.ts b/dallosh/clients/dallosh_web/src/lib/database/utils/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..a78f79f[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/database/utils/index.ts[m
-[36m@@ -0,0 +1,115 @@[m
-[32m+[m[32m/**[m
-[32m+[m[32m * Database Utilities[m
-[32m+[m[32m */[m
-[32m+[m
-[32m+[m[32mimport { v4 as uuidv4 } from 'uuid';[m
-[32m+[m[32mimport { Filter, FilterCondition } from '../types';[m
-[32m+[m
-[32m+[m[32m/**[m
-[32m+[m[32m * Generate UUID if not provided[m
-[32m+[m[32m */[m
-[32m+[m[32mexport function generateUid(uid?: string): string {[m
-[32m+[m[32m  return uid || uuidv4();[m
-[32m+[m[32m}[m
-[32m+[m
-[32m+[m[32m/**[m
-[32m+[m[32m * Get current timestamp[m
-[32m+[m[32m */[m
-[32m+[m[32mexport function getCurrentTimestamp(): number {[m
-[32m+[m[32m  return Date.now();[m
-[32m+[m[32m}[m
-[32m+[m
-[32m+[m[32m/**[m
-[32m+[m[32m * Convert MongoDB-like filter to native MongoDB filter[m
-[32m+[m[32m */[m
-[32m+[m[32mexport function convertFilter(filter: Filter): any {[m
-[32m+[m[32m  if (!filter) return {};[m
-[32m+[m
-[32m+[m[32m  const mongoFilter: any = {};[m
-[32m+[m
-[32m+[m[32m  for (const [key, value] of Object.entries(filter)) {[m
-[32m+[m[32m    if (key === '$or' || key === '$and') {[m
-[32m+[m[32m      mongoFilter[key] = value.map((subFilter: Filter) => convertFilter(subFilter));[m
-[32m+[m[32m    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {[m
-[32m+[m[32m      const condition = value as FilterCondition;[m
-[32m+[m[32m      const mongoCondition: any = {};[m
-[32m+[m
-[32m+[m[32m      for (const [condKey, condValue] of Object.entries(condition)) {[m
-[32m+[m[32m        switch (condKey) {[m
-[32m+[m[32m          case '$like':[m
-[32m+[m[32m            // Convert wildcard pattern to regex[m
-[32m+[m[32m            const pattern = condValue.replace(/\*/g, '.*');[m
-[32m+[m[32m            mongoCondition.$regex = new RegExp(`^${pattern}$`, 'i');[m
-[32m+[m[32m            break;[m
-[32m+[m[32m          case '$reg':[m
-[32m+[m[32m            const flags = (condition as any).$options || '';[m
-[32m+[m[32m            mongoCondition.$regex = new RegExp(condValue, flags);[m
-[32m+[m[32m            break;[m
-[32m+[m[32m          case '$gt':[m
-[32m+[m[32m          case '$gte':[m
-[32m+[m[32m          case '$lt':[m
-[32m+[m[32m          case '$lte':[m
-[32m+[m[32m          case '$eq':[m
-[32m+[m[32m          case '$ne':[m
-[32m+[m[32m          case '$in':[m
-[32m+[m[32m          case '$nin':[m
-[32m+[m[32m            mongoCondition[condKey] = condValue;[m
-[32m+[m[32m            break;[m
-[32m+[m[32m        }[m
-[32m+[m[32m      }[m
-[32m+[m
-[32m+[m[32m      mongoFilter[key] = Object.keys(mongoCondition).length > 0 ? mongoCondition : value;[m
-[32m+[m[32m    } else {[m
-[32m+[m[32m      mongoFilter[key] = value;[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  return mongoFilter;[m
-[32m+[m[32m}[m
-[32m+[m
-[32m+[m[32m/**[m
-[32m+[m[32m * Convert sort object to MongoDB sort[m
-[32m+[m[32m */[m
-[32m+[m[32mexport function convertSort(sort?: Record<string, 'asc' | 'desc' | 1 | -1>): any {[m
-[32m+[m[32m  if (!sort) return {};[m
-[32m+[m
-[32m+[m[32m  const mongoSort: any = {};[m
-[32m+[m[32m  for (const [key, value] of Object.entries(sort)) {[m
-[32m+[m[32m    if (value === 'asc') {[m
-[32m+[m[32m      mongoSort[key] = 1;[m
-[32m+[m[32m    } else if (value === 'desc') {[m
-[32m+[m[32m      mongoSort[key] = -1;[m
-[32m+[m[32m    } else {[m
-[32m+[m[32m      mongoSort[key] = value;[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  return mongoSort;[m
-[32m+[m[32m}[m
-[32m+[m
-[32m+[m[32m/**[m
-[32m+[m[32m * Build database name with prefix[m
-[32m+[m[32m */[m
-[32m+[m[32mexport function buildDatabaseName(primaryDbName: string, databaseId?: string): string {[m
-[32m+[m[32m  if (!databaseId) return primaryDbName;[m
-[32m+[m[32m  return `${primaryDbName}_${databaseId.replace(/-/g, '_')}`;[m
-[32m+[m[32m}[m
-[32m+[m
-[32m+[m[32m/**[m
-[32m+[m[32m * Build table/collection name with prefix[m
-[32m+[m[32m */[m
-[32m+[m[32mexport function buildTableName(tableId: string): string {[m
-[32m+[m[32m  return `table_${tableId.replace(/-/g, '_')}`;[m
-[32m+[m[32m}[m
-[32m+[m
-[32m+[m[32m/**[m
-[32m+[m[32m * Validate required fields[m
-[32m+[m[32m */[m
-[32m+[m[32mexport function validateRequired(obj: any, fields: string[]): string | null {[m
-[32m+[m[32m  for (const field of fields) {[m
-[32m+[m[32m    if (!obj[field]) {[m
-[32m+[m[32m      return `Field '${field}' is required`;[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m[32m  return null;[m
-[32m+[m[32m}[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/polyfills.ts b/dallosh/clients/dallosh_web/src/lib/polyfills.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..9c3ab55[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/polyfills.ts[m
-[36m@@ -0,0 +1,157 @@[m
-[32m+[m[32m// Comprehensive polyfills for older browser compatibility[m
-[32m+[m[32m// This runs immediately to prevent syntax errors[m
-[32m+[m
-[32m+[m[32m// Only run polyfills in browser environment[m
-[32m+[m[32mif (typeof window !== 'undefined') {[m
-[32m+[m[32m  // Immediately suppress all JavaScript errors for Android 10 compatibility[m
-[32m+[m[32m  const originalConsoleError = console.error;[m
-[32m+[m[32m  const originalConsoleWarn = console.warn;[m
-[32m+[m[41m  [m
-[32m+[m[32m  console.error = function(...args) {[m
-[32m+[m[32m    const message = args.join(' ');[m
-[32m+[m[32m    if (message.includes('SyntaxError') || message.includes('Unexpected token') || message.includes('ChunkLoadError')) {[m
-[32m+[m[32m      console.log('Suppressed error:', message);[m
-[32m+[m[32m      return;[m
-[32m+[m[32m    }[m
-[32m+[m[32m    originalConsoleError.apply(console, args);[m
-[32m+[m[32m  };[m
-[32m+[m[41m  [m
-[32m+[m[32m  console.warn = function(...args) {[m
-[32m+[m[32m    const message = args.join(' ');[m
-[32m+[m[32m    if (message.includes('ChunkLoadError') || message.includes('Loading chunk')) {[m
-[32m+[m[32m      console.log('Suppressed warning:', message);[m
-[32m+[m[32m      return;[m
-[32m+[m[32m    }[m
-[32m+[m[32m    originalConsoleWarn.apply(console, args);[m
-[32m+[m[32m  };[m
-[32m+[m[41m  [m
-[32m+[m[32m  // Override window.onerror to catch and suppress syntax errors[m
-[32m+[m[32m  const originalOnError = window.onerror;[m
-[32m+[m[32m  window.onerror = function(message, source, lineno, colno, error) {[m
-[32m+[m[32m    if (message && (message.includes('SyntaxError') || message.includes('Unexpected token') || message.includes('ChunkLoadError'))) {[m
-[32m+[m[32m      console.log('Suppressed window error:', message);[m
-[32m+[m[32m      return true; // Prevent error from propagating[m
-[32m+[m[32m    }[m
-[32m+[m[32m    if (originalOnError) {[m
-[32m+[m[32m      return originalOnError.call(this, message, source, lineno, colno, error);[m
-[32m+[m[32m    }[m
-[32m+[m[32m    return false;[m
-[32m+[m[32m  };[m
-[32m+[m[41m  [m
-[32m+[m[32m  // Add event listener for unhandled promise rejections[m
-[32m+[m[32m  window.addEventListener('unhandledrejection', function(event: any) {[m
-[32m+[m[32m    const message = typeof event.reason === 'string' ? event.reason : (event.reason?.message || '');[m
-[32m+[m[32m    if (message && (message.includes('SyntaxError') || message.includes('Unexpected token'))) {[m
-[32m+[m[32m      console.log('Suppressed unhandled rejection:', message);[m
-[32m+[m[32m      event.preventDefault();[m
-[32m+[m[32m    }[m
-[32m+[m[32m  });[m
-[32m+[m[41m  [m
-[32m+[m[32m  // Optional chaining polyfill for older browsers[m
-[32m+[m[32m  if (!Object.prototype.hasOwnProperty.call(window, 'optionalChainingPolyfill')) {[m
-[32m+[m[32m    (window as any).optionalChainingPolyfill = true;[m
-[32m+[m[41m    [m
-[32m+[m[32m    // Polyfill for optional chaining[m
-[32m+[m[32m    if (!Object.prototype.hasOwnProperty.call(window, 'optionalChaining')) {[m
-[32m+[m[32m      (window as any).optionalChaining = function(obj: any, path: string) {[m
-[32m+[m[32m        return path.split('.').reduce((current, key) => {[m
-[32m+[m[32m          return current && current[key] !== undefined ? current[key] : undefined;[m
-[32m+[m[32m        }, obj);[m
-[32m+[m[32m      };[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  // Nullish coalescing polyfill[m
-[32m+[m[32m  if (!Object.prototype.hasOwnProperty.call(window, 'nullishCoalescingPolyfill')) {[m
-[32m+[m[32m    (window as any).nullishCoalescingPolyfill = true;[m
-[32m+[m[41m    [m
-[32m+[m[32m    // Polyfill for nullish coalescing[m
-[32m+[m[32m    if (!Object.prototype.hasOwnProperty.call(window, 'nullishCoalescing')) {[m
-[32m+[m[32m      (window as any).nullishCoalescing = function(left: any, right: any) {[m
-[32m+[m[32m        return left !== null && left !== undefined ? left : right;[m
-[32m+[m[32m      };[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  // IntersectionObserver polyfill for older browsers[m
-[32m+[m[32m  if (typeof IntersectionObserver === 'undefined') {[m
-[32m+[m[32m    (window as any).IntersectionObserver = class IntersectionObserver {[m
-[32m+[m[32m      private callback: Function;[m
-[32m+[m[32m      private options: any;[m
-[32m+[m[32m      private entries: any[];[m
-[32m+[m[41m      [m
-[32m+[m[32m      constructor(callback: Function, options?: any) {[m
-[32m+[m[32m        this.callback = callback;[m
-[32m+[m[32m        this.options = options;[m
-[32m+[m[32m        this.entries = [];[m
-[32m+[m[32m      }[m
-[32m+[m[41m      [m
-[32m+[m[32m      observe(element: Element) {[m
-[32m+[m[32m        // Simple fallback - just call the callback immediately[m
-[32m+[m[32m        setTimeout(() => {[m
-[32m+[m[32m          this.callback([{[m
-[32m+[m[32m            target: element,[m
-[32m+[m[32m            isIntersecting: true,[m
-[32m+[m[32m            intersectionRatio: 1,[m
-[32m+[m[32m            boundingClientRect: element.getBoundingClientRect(),[m
-[32m+[m[32m            rootBounds: null,[m
-[32m+[m[32m            time: Date.now()[m
-[32m+[m[32m          }]);[m
-[32m+[m[32m        }, 0);[m
-[32m+[m[32m      }[m
-[32m+[m[41m      [m
-[32m+[m[32m      unobserve(element: Element) {[m
-[32m+[m[32m        // No-op for fallback[m
-[32m+[m[32m      }[m
-[32m+[m[41m      [m
-[32m+[m[32m      disconnect() {[m
-[32m+[m[32m        // No-op for fallback[m
-[32m+[m[32m      }[m
-[32m+[m[32m    };[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  // ResizeObserver polyfill for older browsers[m
-[32m+[m[32m  if (typeof ResizeObserver === 'undefined') {[m
-[32m+[m[32m    (window as any).ResizeObserver = class ResizeObserver {[m
-[32m+[m[32m      private callback: Function;[m
-[32m+[m[41m      [m
-[32m+[m[32m      constructor(callback: Function) {[m
-[32m+[m[32m        this.callback = callback;[m
-[32m+[m[32m      }[m
-[32m+[m[41m      [m
-[32m+[m[32m      observe(element: Element) {[m
-[32m+[m[32m        // Simple fallback - just call the callback immediately[m
-[32m+[m[32m        setTimeout(() => {[m
-[32m+[m[32m          this.callback([{[m
-[32m+[m[32m            target: element,[m
-[32m+[m[32m            contentRect: element.getBoundingClientRect(),[m
-[32m+[m[32m            borderBoxSize: [{ blockSize: 0, inlineSize: 0 }],[m
-[32m+[m[32m            contentBoxSize: [{ blockSize: 0, inlineSize: 0 }],[m
-[32m+[m[32m            devicePixelContentBoxSize: [{ blockSize: 0, inlineSize: 0 }][m
-[32m+[m[32m          }]);[m
-[32m+[m[32m        }, 0);[m
-[32m+[m[32m      }[m
-[32m+[m[41m      [m
-[32m+[m[32m      unobserve(element: Element) {[m
-[32m+[m[32m        // No-op for fallback[m
-[32m+[m[32m      }[m
-[32m+[m[41m      [m
-[32m+[m[32m      disconnect() {[m
-[32m+[m[32m        // No-op for fallback[m
-[32m+[m[32m      }[m
-[32m+[m[32m    };[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  // CustomEvent polyfill for older browsers[m
-[32m+[m[32m  if (typeof CustomEvent === 'undefined') {[m
-[32m+[m[32m    (window as any).CustomEvent = function(type: string, params?: any) {[m
-[32m+[m[32m      params = params || { bubbles: false, cancelable: false, detail: undefined };[m
-[32m+[m[32m      const evt = document.createEvent('CustomEvent');[m
-[32m+[m[32m      evt.initCustomEvent(type, params.bubbles, params.cancelable, params.detail);[m
-[32m+[m[32m      return evt;[m
-[32m+[m[32m    };[m
-[32m+[m[32m    (window as any).CustomEvent.prototype = Event.prototype;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  console.log('Comprehensive polyfills loaded for browser compatibility');[m
-[32m+[m[32m}[m[41m [m
-\ No newline at end of file[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/ai/index.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/ai/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..165934d[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/ai/index.ts[m
-[36m@@ -0,0 +1,130 @@[m
-[32m+[m[32m// AI API module for chat and streaming chat[m[41m[m
-[32m+[m[32mimport axios, { AxiosInstance } from 'axios';[m[41m[m
-[32m+[m[32mimport { BaseClient } from '../base-client';[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32mexport interface GenerateChatParams {[m[41m[m
-[32m+[m[32m  input: any;[m[41m[m
-[32m+[m[32m  agents?: any;[m[41m[m
-[32m+[m[32m  context?: any;[m[41m[m
-[32m+[m[32m}[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32mexport interface StreamCallbacks {[m[41m[m
-[32m+[m[32m  onData: (data: any) => void;[m[41m[m
-[32m+[m[32m  onFinish?: () => void;[m[41m[m
-[32m+[m[32m  onError?: (err: any) => void;[m[41m[m
-[32m+[m[32m}[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32mexport class AIAPI {[m[41m[m
-[32m+[m[32m  private baseUrl: string;[m[41m[m
-[32m+[m[32m  private client: BaseClient;[m[41m[m
-[32m+[m[32m  private axiosInstance: AxiosInstance;[m[41m[m
-[32m+[m[32m  constructor(client: BaseClient, baseUrl: string) {[m[41m[m
-[32m+[m[32m    this.client = client;[m[41m[m
-[32m+[m[32m    this.baseUrl = baseUrl;[m[41m[m
-[32m+[m[32m    this.axiosInstance = axios.create({[m[41m[m
-[32m+[m[32m      baseURL: baseUrl,[m[41m[m
-[32m+[m[32m      headers: { 'Content-Type': 'application/json' },[m[41m[m
-[32m+[m[32m    });[m[41m[m
-[32m+[m[32m    // Attach token and refresh logic[m[41m[m
-[32m+[m[32m    this.axiosInstance.interceptors.request.use((config) => {[m[41m[m
-[32m+[m[32m      if (this.client['accessToken']) {[m[41m[m
-[32m+[m[32m        config.headers = config.headers || {};[m[41m[m
-[32m+[m[32m        config.headers.Authorization = `Bearer ${this.client['accessToken']}`;[m[41m[m
-[32m+[m[32m      }[m[41m[m
-[32m+[m[32m      return config;[m[41m[m
-[32m+[m[32m    });[m[41m[m
-[32m+[m[32m    this.axiosInstance.interceptors.response.use([m[41m[m
-[32m+[m[32m      (response) => response,[m[41m[m
-[32m+[m[32m      async (error) => {[m[41m[m
-[32m+[m[32m        const originalRequest = error.config;[m[41m[m
-[32m+[m[32m        if (error.response?.status === 401 && !originalRequest._retry) {[m[41m[m
-[32m+[m[32m          originalRequest._retry = true;[m[41m[m
-[32m+[m[32m          if (!(this.client as any).isRefreshing) {[m[41m[m
-[32m+[m[32m            (this.client as any).refreshPromise = this.client['performTokenRefresh']();[m[41m[m
-[32m+[m[32m          }[m[41m[m
-[32m+[m[32m          const refreshed = await (this.client as any).refreshPromise;[m[41m[m
-[32m+[m[32m          if (refreshed) {[m[41m[m
-[32m+[m[32m            originalRequest.headers.Authorization = `Bearer ${this.client['accessToken']}`;[m[41m[m
-[32m+[m[32m            return this.axiosInstance(originalRequest);[m[41m[m
-[32m+[m[32m          }[m[41m[m
-[32m+[m[32m        }[m[41m[m
-[32m+[m[32m        return Promise.reject(error);[m[41m[m
-[32m+[m[32m      }[m[41m[m
-[32m+[m[32m    );[m[41m[m
-[32m+[m[32m  }[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  async generateChat({ input, agents, context }: GenerateChatParams) {[m[41m[m
-[32m+[m[32m    const res = await this.axiosInstance.post('/ai/chat', { input, agents, context, stream: false });[m[41m[m
-[32m+[m[32m    return res.data;[m[41m[m
-[32m+[m[32m  }[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  async generateStreamChat([m[41m[m
-[32m+[m[32m    { input, agents, context }: GenerateChatParams,[m[41m[m
-[32m+[m[32m    { onData, onFinish, onError }: StreamCallbacks[m[41m[m
-[32m+[m[32m  ): Promise<void> {[m[41m[m
-[32m+[m[32m    const headers: Record<string, string> = {[m[41m[m
-[32m+[m[32m      'Content-Type': 'application/json',[m[41m[m
-[32m+[m[32m    };[m[41m[m
-[32m+[m[32m    if (this.client['accessToken']) headers['Authorization'] = `Bearer ${this.client['accessToken']}`;[m[41m[m
-[32m+[m[32m    let res = await fetch(`${this.baseUrl}/ai/chat`, {[m[41m[m
-[32m+[m[32m      method: 'POST',[m[41m[m
-[32m+[m[32m      headers,[m[41m[m
-[32m+[m[32m      body: JSON.stringify({ input, agents, context, stream: true }),[m[41m[m
-[32m+[m[32m    });[m[41m[m
-[32m+[m[32m    if (res.status === 401) {[m[41m[m
-[32m+[m[32m      // Try refresh[m[41m[m
-[32m+[m[32m      const refreshed = await (this.client as any).performTokenRefresh();[m[41m[m
-[32m+[m[32m      if (refreshed) {[m[41m[m
-[32m+[m[32m        headers['Authorization'] = `Bearer ${this.client['accessToken']}`;[m[41m[m
-[32m+[m[32m        res = await fetch(`${this.baseUrl}/ai/chat`, {[m[41m[m
-[32m+[m[32m          method: 'POST',[m[41m[m
-[32m+[m[32m          headers,[m[41m[m
-[32m+[m[32m          body: JSON.stringify({ input, agents, context, stream: true }),[m[41m[m
-[32m+[m[32m        });[m[41m[m
-[32m+[m[32m      }[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m    if (!res.body) {[m[41m[m
-[32m+[m[32m      const err = new Error('No response body for streaming');[m[41m[m
-[32m+[m[32m      onError?.(err);[m[41m[m
-[32m+[m[32m      throw err;[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m    const reader = res.body.getReader();[m[41m[m
-[32m+[m[32m    const decoder = new TextDecoder();[m[41m[m
-[32m+[m[32m    let buffer = '';[m[41m[m
-[32m+[m[32m    try {[m[41m[m
-[32m+[m[32m      while (true) {[m[41m[m
-[32m+[m[32m        const { done, value } = await reader.read();[m[41m[m
-[32m+[m[32m        if (done) break;[m[41m[m
-[32m+[m[32m        buffer += decoder.decode(value, { stream: true });[m[41m[m
-[32m+[m[32m        let lines = buffer.split('\n');[m[41m[m
-[32m+[m[32m        buffer = lines.pop() ?? '';[m[41m[m
-[32m+[m[32m        for (const line of lines) {[m[41m[m
-[32m+[m[32m          if (line.trim() === '') continue;[m[41m[m
-[32m+[m[32m          try {[m[41m[m
-[32m+[m[32m            const parsed = JSON.parse(line);[m[41m[m
-[32m+[m[32m            onData(parsed.data);[m[41m[m
-[32m+[m[32m          } catch (e) {[m[41m[m
-[32m+[m[32m            // Optionally, you can call onError here for parse errors[m[41m[m
-[32m+[m[32m          }[m[41m[m
-[32m+[m[32m        }[m[41m[m
-[32m+[m[32m      }[m[41m[m
-[32m+[m[32m      if (buffer.trim() !== '') {[m[41m[m
-[32m+[m[32m        try {[m[41m[m
-[32m+[m[32m          const parsed = JSON.parse(buffer);[m[41m[m
-[32m+[m[32m          onData(parsed.data);[m[41m[m
-[32m+[m[32m        } catch (e) {[m[41m[m
-[32m+[m[32m          // Optionally, you can call onError here for parse errors[m[41m[m
-[32m+[m[32m        }[m[41m[m
-[32m+[m[32m      }[m[41m[m
-[32m+[m[32m      onFinish?.();[m[41m[m
-[32m+[m[32m    } catch (err) {[m[41m[m
-[32m+[m[32m      onError?.(err);[m[41m[m
-[32m+[m[32m      throw err;[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m  }[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  async getModels({ baseUrl, apiKey }: { baseUrl: string; apiKey: string }) {[m[41m[m
-[32m+[m[32m    const res = await this.axiosInstance.post('/ai/models', { baseUrl, apiKey });[m[41m[m
-[32m+[m[32m    return res.data;[m[41m[m
-[32m+[m[32m  }[m[41m[m
-[32m+[m[32m}[m[41m[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/auth/index.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/auth/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..260e06d[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/auth/index.ts[m
-[36m@@ -0,0 +1,82 @@[m
-[32m+[m[32mimport { BaseClient } from '../base-client';[m
-[32m+[m[32mimport {[m
-[32m+[m[32m  ApiResponse,[m
-[32m+[m[32m  QueryOptions,[m
-[32m+[m[32m  QueryResult,[m
-[32m+[m[32m  CountResult,[m
-[32m+[m[32m  UpdateResult,[m
-[32m+[m[32m  DeleteResult,[m
-[32m+[m[32m  DeleteOptions,[m
-[32m+[m[32m  User,[m
-[32m+[m[32m  CreateUserRequest,[m
-[32m+[m[32m  UpdateUserRequest,[m
-[32m+[m[32m  AuthResponse,[m
-[32m+[m[32m  LoginRequest,[m
-[32m+[m[32m  RegisterRequest,[m
-[32m+[m[32m  RefreshTokenRequest,[m
-[32m+[m[32m  AuthTokens[m
-[32m+[m[32m} from '../../types/schema';[m
-[32m+[m
-[32m+[m[32mexport class AuthAPI {[m
-[32m+[m[32m  constructor(private client: BaseClient) {}[m
-[32m+[m
-[32m+[m[32m  async register(request: { data: RegisterRequest }): Promise<ApiResponse<AuthResponse>> {[m
-[32m+[m[32m    const response = await this.client.request<AuthResponse>('POST', '/auth/register', { data: request });[m
-[32m+[m[32m    if (response.data?.tokens) {[m
-[32m+[m[32m      this.client.setTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);[m
-[32m+[m[32m    }[m
-[32m+[m[32m    return response;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async login(request: { data: LoginRequest }): Promise<ApiResponse<AuthResponse>> {[m
-[32m+[m[32m    const response = await this.client.request<AuthResponse>('POST', '/auth/login', {[m
-[32m+[m[32m      data: request[m
-[32m+[m[32m    });[m
-[32m+[m[32m    if (response.data?.tokens) {[m
-[32m+[m[32m      this.client.setTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);[m
-[32m+[m[32m    }[m
-[32m+[m[32m    return response;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async refreshToken(data: RefreshTokenRequest): Promise<ApiResponse<{ tokens: AuthTokens }>> {[m
-[32m+[m[32m    const response = await this.client.request<{ tokens: AuthTokens }>('POST', '/auth/refresh-token', {[m
-[32m+[m[32m      params: { refreshToken: data.refreshToken }[m
-[32m+[m[32m    });[m
-[32m+[m[32m    if (response.data?.tokens) {[m
-[32m+[m[32m      this.client.setTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);[m
-[32m+[m[32m    }[m
-[32m+[m[32m    return response;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async create(data: CreateUserRequest): Promise<ApiResponse<User>> {[m
-[32m+[m[32m    return this.client.request<User>('POST', '/auth', { data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async get(options: { filter: Record<string, any>; select?: string[] }): Promise<ApiResponse<User>> {[m
-[32m+[m[32m    return this.client.request<User>('GET', '/auth', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async query(options: QueryOptions): Promise<ApiResponse<QueryResult<User>>> {[m
-[32m+[m[32m    return this.client.request<QueryResult<User>>('GET', '/auth/query', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async count(options: { filter?: Record<string, any> }): Promise<ApiResponse<CountResult>> {[m
-[32m+[m[32m    return this.client.request<CountResult>('GET', '/auth/count', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async put(filter: Record<string, any>, data: UpdateUserRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request<UpdateResult>('PUT', '/auth', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async patch(filter: Record<string, any>, data: UpdateUserRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request<UpdateResult>('PATCH', '/auth', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async delete(filter: Record<string, any>, options?: DeleteOptions): Promise<ApiResponse<DeleteResult>> {[m
-[32m+[m[32m    return this.client.request<DeleteResult>('DELETE', '/auth', { params: { filter, options } });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  logout(): void {[m
-[32m+[m[32m    this.client.clearTokens();[m
-[32m+[m[32m  }[m
-[32m+[m[32m}[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/base-client.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/base-client.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..62bc5ca[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/base-client.ts[m
-[36m@@ -0,0 +1,270 @@[m
-[32m+[m[32mimport axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';[m
-[32m+[m[32mimport { io, Socket } from 'socket.io-client';[m
-[32m+[m[32mimport { ApiResponse, AuthTokens } from '../types/schema';[m
-[32m+[m[32mimport { buildQueryParams, buildApiUrl, storage, TOKEN_KEYS } from '../utils';[m
-[32m+[m
-[32m+[m
-[32m+[m[32mexport interface SodularClientConfig {[m
-[32m+[m[32m  baseUrl: string;[m
-[32m+[m[32m  timeout?: number;[m
-[32m+[m[32m}[m
-[32m+[m
-[32m+[m[32mexport class BaseClient {[m
-[32m+[m[32m  public axiosInstance: AxiosInstance;[m
-[32m+[m[32m  private baseUrl: string;[m
-[32m+[m[32m  private currentDatabaseId?: string;[m
-[32m+[m[32m  private accessToken?: string;[m
-[32m+[m[32m  private refreshToken?: string;[m
-[32m+[m[32m  private isRefreshing = false;[m
-[32m+[m[32m  private refreshPromise: Promise<boolean> | null = null;[m
-[32m+[m[32m  private socket: Socket | null = null;[m
-[32m+[m
-[32m+[m[32m  constructor(config: SodularClientConfig) {[m
-[32m+[m[32m    this.baseUrl = config.baseUrl;[m
-[32m+[m[41m    [m
-[32m+[m[32m    this.axiosInstance = axios.create({[m
-[32m+[m[32m      baseURL: config.baseUrl,[m
-[32m+[m[32m      timeout: config.timeout || 30000,[m
-[32m+[m[32m      headers: {[m
-[32m+[m[32m        'Content-Type': 'application/json',[m
-[32m+[m[32m      },[m
-[32m+[m[32m    });[m
-[32m+[m
-[32m+[m[32m    this.loadTokensFromStorage();[m
-[32m+[m[41m    [m
-[32m+[m[32m    this.axiosInstance.interceptors.request.use((config) => {[m
-[32m+[m[32m      if (this.accessToken) {[m
-[32m+[m[32m        config.headers.Authorization = `Bearer ${this.accessToken}`;[m
-[32m+[m[32m      }[m
-[32m+[m[32m      return config;[m
-[32m+[m[32m    });[m
-[32m+[m
-[32m+[m[32m    this.axiosInstance.interceptors.response.use([m
-[32m+[m[32m      (response) => response,[m
-[32m+[m[32m      async (error) => {[m
-[32m+[m[32m        const originalRequest = error.config;[m
-[32m+[m[32m        if (error.response?.status === 401 && !originalRequest._retry) {[m
-[32m+[m[32m          originalRequest._retry = true;[m
-[32m+[m[41m          [m
-[32m+[m[32m          if (!this.isRefreshing) {[m
-[32m+[m[32m            this.refreshPromise = this.performTokenRefresh();[m
-[32m+[m[32m          }[m
-[32m+[m
-[32m+[m[32m          const refreshed = await this.refreshPromise;[m
-[32m+[m[41m          [m
-[32m+[m[32m          if (refreshed) {[m
-[32m+[m[32m            originalRequest.headers.Authorization = `Bearer ${this.accessToken}`;[m
-[32m+[m[32m            return this.axiosInstance(originalRequest);[m
-[32m+[m[32m          }[m
-[32m+[m[32m        }[m
-[32m+[m[32m        return Promise.reject(error);[m
-[32m+[m[32m      }[m
-[32m+[m[32m    );[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async connect(): Promise<{ isReady: boolean; error?: string }> {[m
-[32m+[m[32m    try {[m
-[32m+[m[32m      await this.axiosInstance.get('/health');[m
-[32m+[m[41m      [m
-[32m+[m[32m      // Connect to socket server[m
-[32m+[m[32m      this.connectSocket();[m
-[32m+[m[41m      [m
-[32m+[m[32m      return { isReady: true };[m
-[32m+[m[32m    } catch (error: any) {[m
-[32m+[m[32m      return {[m[41m [m
-[32m+[m[32m        isReady: false,[m[41m [m
-[32m+[m[32m        error: error.message || 'Failed to connect to Sodular backend',[m
-[32m+[m[32m      };[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  /**[m
-[32m+[m[32m   * Extract host URL from API base URL[m
-[32m+[m[32m   * e.g., 'http://sodular_backend:5001/api/v1' -> 'http://sodular_backend:5001'[m
-[32m+[m[32m   */[m
-[32m+[m[32m  private getSocketUrl(): string {[m
-[32m+[m[32m    try {[m
-[32m+[m[32m      const url = new URL(this.baseUrl);[m
-[32m+[m[32m      return `${url.protocol}//${url.host}`;[m
-[32m+[m[32m    } catch (error) {[m
-[32m+[m[32m      console.error('Failed to parse base URL for socket connection:', error);[m
-[32m+[m[32m      // Fallback: try to remove common API paths[m
-[32m+[m[32m      return this.baseUrl[m
-[32m+[m[32m        .replace(/\/api\/v\d+\/?$/, '')[m
-[32m+[m[32m        .replace(/\/api\/?$/, '')[m
-[32m+[m[32m        .replace(/\/$/, '');[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  /**[m
-[32m+[m[32m   * Connect to socket server[m
-[32m+[m[32m   */[m
-[32m+[m[32m  private connectSocket(): void {[m
-[32m+[m[32m    try {[m
-[32m+[m[32m      const socketUrl = this.getSocketUrl();[m
-[32m+[m[32m      console.log('Connecting to socket at:', socketUrl);[m
-[32m+[m[41m      [m
-[32m+[m[32m      this.socket = io(socketUrl, {[m
-[32m+[m[32m        transports: ['websocket', 'polling'],[m
-[32m+[m[32m        auth: {[m
-[32m+[m[32m          token: this.accessToken[m
-[32m+[m[32m        }[m
-[32m+[m[32m      });[m
-[32m+[m
-[32m+[m[32m      this.socket.on('connect', () => {[m
-[32m+[m[32m        console.log('Socket connected:', this.socket?.id);[m
-[32m+[m[32m      });[m
-[32m+[m
-[32m+[m[32m      this.socket.on('disconnect', () => {[m
-[32m+[m[32m        console.log('Socket disconnected');[m
-[32m+[m[32m      });[m
-[32m+[m
-[32m+[m[32m      this.socket.on('connect_error', (error) => {[m
-[32m+[m[32m        console.error('Socket connection error:', error);[m
-[32m+[m[32m      });[m
-[32m+[m[32m    } catch (error) {[m
-[32m+[m[32m      console.error('Failed to connect to socket server:', error);[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  use(databaseId?: string): void {[m
-[32m+[m[32m    this.currentDatabaseId = databaseId;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  setToken(accessToken: string): void {[m
-[32m+[m[32m    this.accessToken = accessToken;[m
-[32m+[m[32m    storage.set(TOKEN_KEYS.ACCESS_TOKEN, accessToken);[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  setTokens(accessToken: string, refreshToken: string): void {[m
-[32m+[m[32m    this.accessToken = accessToken;[m
-[32m+[m[32m    this.refreshToken = refreshToken;[m
-[32m+[m[32m    storage.set(TOKEN_KEYS.ACCESS_TOKEN, accessToken);[m
-[32m+[m[32m    storage.set(TOKEN_KEYS.REFRESH_TOKEN, refreshToken);[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  clearTokens(): void {[m
-[32m+[m[32m    this.accessToken = undefined;[m
-[32m+[m[32m    this.refreshToken = undefined;[m
-[32m+[m[32m    storage.remove(TOKEN_KEYS.ACCESS_TOKEN);[m
-[32m+[m[32m    storage.remove(TOKEN_KEYS.REFRESH_TOKEN);[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  /**[m
-[32m+[m[32m   * Get socket instance[m
-[32m+[m[32m   */[m
-[32m+[m[32m  getSocket(): Socket | null {[m
-[32m+[m[32m    return this.socket;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  /**[m
-[32m+[m[32m   * Join a channel for listening to events[m
-[32m+[m[32m   */[m
-[32m+[m[32m  joinChannel(databaseId: string | undefined, tableId: string): void {[m
-[32m+[m[32m    if (this.socket) {[m
-[32m+[m[32m      this.socket.emit('join', { database_id: databaseId, table_id: tableId });[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  /**[m
-[32m+[m[32m   * Leave a channel[m
-[32m+[m[32m   */[m
-[32m+[m[32m  leaveChannel(databaseId: string | undefined, tableId: string): void {[m
-[32m+[m[32m    if (this.socket) {[m
-[32m+[m[32m      this.socket.emit('leave', { database_id: databaseId, table_id: tableId });[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  /**[m
-[32m+[m[32m   * Listen to events on a channel[m
-[32m+[m[32m   */[m
-[32m+[m[32m  on(event: string, callback: (data: any) => void): void {[m
-[32m+[m[32m    if (this.socket) {[m
-[32m+[m[32m      this.socket.on(event, callback);[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  /**[m
-[32m+[m[32m   * Remove event listener[m
-[32m+[m[32m   */[m
-[32m+[m[32m  off(event: string, callback?: (data: any) => void): void {[m
-[32m+[m[32m    if (this.socket) {[m
-[32m+[m[32m      if (callback) {[m
-[32m+[m[32m        this.socket.off(event, callback);[m
-[32m+[m[32m      } else {[m
-[32m+[m[32m        this.socket.off(event);[m
-[32m+[m[32m      }[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  private loadTokensFromStorage(): void {[m
-[32m+[m[32m    this.accessToken = storage.get(TOKEN_KEYS.ACCESS_TOKEN) || undefined;[m
-[32m+[m[32m    this.refreshToken = storage.get(TOKEN_KEYS.REFRESH_TOKEN) || undefined;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  private async performTokenRefresh(): Promise<boolean> {[m
-[32m+[m[32m    this.isRefreshing = true;[m
-[32m+[m[32m    if (!this.refreshToken) {[m
-[32m+[m[32m      this.isRefreshing = false;[m
-[32m+[m[32m      return false;[m
-[32m+[m[32m    }[m
-[32m+[m
-[32m+[m[32m    try {[m
-[32m+[m[32m      let query = `refreshToken=${this.refreshToken}`;[m
-[32m+[m[32m      if (this.currentDatabaseId) {[m
-[32m+[m[32m        query += `&database_id=${this.currentDatabaseId}`;[m
-[32m+[m[32m      }[m
-[32m+[m[32m      const url = buildApiUrl(this.baseUrl, '/auth/refresh-token', query);[m
-[32m+[m[32m      const response = await axios.post(url);[m
-[32m+[m[32m      const { data } = response.data as ApiResponse<{ tokens: AuthTokens }>;[m
-[32m+[m[41m      [m
-[32m+[m[32m      if (data?.tokens) {[m
-[32m+[m[32m        this.setTokens(data.tokens.accessToken, data.tokens.refreshToken);[m
-[32m+[m[32m        this.isRefreshing = false;[m
-[32m+[m[32m        return true;[m
-[32m+[m[32m      }[m
-[32m+[m[41m      [m
-[32m+[m[32m      this.clearTokens();[m
-[32m+[m[32m      this.isRefreshing = false;[m
-[32m+[m[32m      return false;[m
-[32m+[m[32m    } catch (error) {[m
-[32m+[m[32m      this.clearTokens();[m
-[32m+[m[32m      this.isRefreshing = false;[m
-[32m+[m[32m      return false;[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  public async request<T = any>([m
-[32m+[m[32m    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',[m
-[32m+[m[32m    path: string,[m
-[32m+[m[32m    options: {[m
-[32m+[m[32m      data?: any;[m
-[32m+[m[32m      params?: Record<string, any>;[m
-[32m+[m[32m      config?: AxiosRequestConfig;[m
-[32m+[m[32m    } = {}[m
-[32m+[m[32m  ): Promise<ApiResponse<T>> {[m
-[32m+[m[32m    try {[m
-[32m+[m[32m      const { data, params = {}, config = {} } = options;[m
-[32m+[m[41m      [m
-[32m+[m[32m      if (this.currentDatabaseId) {[m
-[32m+[m[32m        params.database_id = this.currentDatabaseId;[m
-[32m+[m[32m      }[m
-[32m+[m[41m      [m
-[32m+[m[32m      const queryParams = buildQueryParams(params);[m
-[32m+[m[32m      const url = buildApiUrl('', path, queryParams);[m
-[32m+[m[41m      [m
-[32m+[m[32m      const response: AxiosResponse<ApiResponse<T>> = await this.axiosInstance.request({[m
-[32m+[m[32m        method,[m
-[32m+[m[32m        url,[m
-[32m+[m[32m        data,[m
-[32m+[m[32m        ...config,[m
-[32m+[m[32m      });[m
-[32m+[m[41m      [m
-[32m+[m[32m      return response.data;[m
-[32m+[m[32m    } catch (error: any) {[m
-[32m+[m[32m      return {[m
-[32m+[m[32m        error: error.response?.data?.error || error.message || 'Request failed'[m
-[32m+[m[32m      };[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m[32m}[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/buckets/index.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/buckets/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..167b533[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/buckets/index.ts[m
-[36m@@ -0,0 +1,35 @@[m
-[32m+[m[32mimport { BaseClient } from '../base-client';[m
-[32m+[m[32mimport {[m
-[32m+[m[32m  BucketSchema,[m
-[32m+[m[32m  CreateBucketRequest,[m
-[32m+[m[32m  UpdateBucketRequest,[m
-[32m+[m[32m} from '../../types/schema/buckets.schema';[m
-[32m+[m[32mimport { ApiResponse, QueryOptions, UpdateResult, DeleteResult, DeleteOptions } from '../../types/schema';[m
-[32m+[m
-[32m+[m[32mexport class BucketsAPI {[m
-[32m+[m[32m  constructor(private client: BaseClient) {}[m
-[32m+[m
-[32m+[m[32m  async create(data: CreateBucketRequest): Promise<ApiResponse<BucketSchema>> {[m
-[32m+[m[32m    return this.client.request('POST', '/buckets', { data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async get(options: { filter: any; select?: any }): Promise<ApiResponse<BucketSchema>> {[m
-[32m+[m[32m    return this.client.request('GET', '/buckets', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async query(options: QueryOptions): Promise<ApiResponse<{ list: BucketSchema[]; total: number }>> {[m
-[32m+[m[32m    return this.client.request('GET', '/buckets/query', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async patch(filter: any, data: UpdateBucketRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request('PATCH', '/buckets', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async put(filter: any, data: UpdateBucketRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request('PUT', '/buckets', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async delete(filter: any, options?: DeleteOptions): Promise<ApiResponse<DeleteResult>> {[m
-[32m+[m[32m    return this.client.request('DELETE', '/buckets', { params: { filter, options } });[m
-[32m+[m[32m  }[m
-[32m+[m[32m}[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/database/index.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/database/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..eade8ea[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/database/index.ts[m
-[36m@@ -0,0 +1,51 @@[m
-[32m+[m[32mimport { BaseClient } from '../base-client';[m
-[32m+[m[32mimport {[m
-[32m+[m[32m  ApiResponse,[m
-[32m+[m[32m  QueryOptions,[m
-[32m+[m[32m  QueryResult,[m
-[32m+[m[32m  CountResult,[m
-[32m+[m[32m  UpdateResult,[m
-[32m+[m[32m  DeleteResult,[m
-[32m+[m[32m  DeleteOptions,[m
-[32m+[m[32m  Database,[m
-[32m+[m[32m  CreateDatabaseRequest,[m
-[32m+[m[32m  UpdateDatabaseRequest[m
-[32m+[m[32m} from '../../types/schema';[m
-[32m+[m
-[32m+[m[32mexport class DatabaseAPI {[m
-[32m+[m[32m  constructor(private client: BaseClient) {}[m
-[32m+[m
-[32m+[m[32m  async exists(databaseId: string): Promise<ApiResponse<{ exists: boolean }>> {[m
-[32m+[m[32m    return this.client.request<{ exists: boolean }>('GET', '/database/exists', {[m
-[32m+[m[32m      params: { database_id: databaseId }[m
-[32m+[m[32m    });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async create(data: CreateDatabaseRequest): Promise<ApiResponse<Database>> {[m
-[32m+[m[32m    return this.client.request<Database>('POST', '/database', { data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async get(options: { filter: Record<string, any>; select?: string[] }): Promise<ApiResponse<Database>> {[m
-[32m+[m[32m    return this.client.request<Database>('GET', '/database', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async query(options: QueryOptions): Promise<ApiResponse<QueryResult<Database>>> {[m
-[32m+[m[32m    return this.client.request<QueryResult<Database>>('GET', '/database/query', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async count(options: { filter?: Record<string, any> }): Promise<ApiResponse<CountResult>> {[m
-[32m+[m[32m    return this.client.request<CountResult>('GET', '/database/count', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async put(filter: Record<string, any>, data: UpdateDatabaseRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request<UpdateResult>('PUT', '/database', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async patch(filter: Record<string, any>, data: UpdateDatabaseRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request<UpdateResult>('PATCH', '/database', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async delete(filter: Record<string, any>, options?: DeleteOptions): Promise<ApiResponse<DeleteResult>> {[m
-[32m+[m[32m    return this.client.request<DeleteResult>('DELETE', '/database', { params: { filter, options } });[m
-[32m+[m[32m  }[m
-[32m+[m[32m}[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/files/index.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/files/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..342a8e8[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/files/index.ts[m
-[36m@@ -0,0 +1,146 @@[m
-[32m+[m[32mimport { BaseClient } from '../base-client';[m
-[32m+[m[32mimport {[m
-[32m+[m[32m  FileSchema,[m
-[32m+[m[32m  UpdateFileRequest,[m
-[32m+[m[32m  DownloadFileRequest,[m
-[32m+[m[32m  DownloadOptions,[m
-[32m+[m[32m  DownloadEvents[m
-[32m+[m[32m} from '../../types/schema/files.schema';[m
-[32m+[m[32mimport { ApiResponse, QueryOptions, UpdateResult, DeleteResult, DeleteOptions } from '../../types/schema';[m
-[32m+[m[32mimport { buildApiUrl, buildQueryParams } from '../../utils';[m
-[32m+[m
-[32m+[m[32mexport class FilesAPI {[m
-[32m+[m[32m  constructor(private client: BaseClient) {}[m
-[32m+[m
-[32m+[m[32m  async upload({[m
-[32m+[m[32m    storage_id,[m
-[32m+[m[32m    bucket_id,[m
-[32m+[m[32m    file_path,[m
-[32m+[m[32m    file,[m
-[32m+[m[32m    filename,[m
-[32m+[m[32m  }: {[m
-[32m+[m[32m    storage_id: string;[m
-[32m+[m[32m    bucket_id: string;[m
-[32m+[m[32m    file_path?: string;[m
-[32m+[m[32m    file: File | Blob;[m
-[32m+[m[32m    filename?: string;[m
-[32m+[m[32m  }, onProgress?: (progress: { loaded: number; total?: number; percentage: number }) => void): Promise<ApiResponse<FileSchema>> {[m
-[32m+[m[32m    const formData = new FormData();[m
-[32m+[m[32m    formData.append('file', file, filename || (file instanceof File ? file.name : 'upload'));[m
-[32m+[m
-[32m+[m[32m    const params: any = { storage_id, bucket_id };[m
-[32m+[m[32m    if (file_path) params.file_path = file_path;[m
-[32m+[m[32m    const sodularClient = this.client as any;[m
-[32m+[m[32m    if (sodularClient.currentDatabaseId) {[m
-[32m+[m[32m      params.database_id = sodularClient.currentDatabaseId;[m
-[32m+[m[32m    }[m
-[32m+[m
-[32m+[m[32m    try {[m
-[32m+[m[32m      const response = await sodularClient.axiosInstance.post('/files/upload', formData, {[m
-[32m+[m[32m        params,[m
-[32m+[m[32m        headers: { 'Content-Type': 'multipart/form-data' },[m
-[32m+[m[32m        onUploadProgress: (progressEvent: any) => {[m
-[32m+[m[32m          if (onProgress && progressEvent.total) {[m
-[32m+[m[32m            const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);[m
-[32m+[m[32m            onProgress({ loaded: progressEvent.loaded, total: progressEvent.total, percentage });[m
-[32m+[m[32m          }[m
-[32m+[m[32m        },[m
-[32m+[m[32m      });[m
-[32m+[m[32m      return response.data;[m
-[32m+[m[32m    } catch (error: any) {[m
-[32m+[m[32m      return { error: error.response?.data?.error || error.message || 'Upload failed' };[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async download([m
-[32m+[m[32m    params: DownloadFileRequest,[m
-[32m+[m[32m    options: DownloadOptions = { type: 'blob' }[m
-[32m+[m[32m  ): Promise<DownloadEvents> {[m
-[32m+[m[32m    let onDataCallback = (progress: any) => {};[m
-[32m+[m[32m    let onFinishCallback = () => {};[m
-[32m+[m[32m    let onErrorCallback = (error: Error) => {};[m
-[32m+[m
-[32m+[m[32m    (async () => {[m
-[32m+[m[32m        const sodularClient = this.client as any;[m
-[32m+[m[32m        const queryParams = { ...params };[m
-[32m+[m
-[32m+[m[32m        if (!queryParams.database_id && sodularClient.currentDatabaseId) {[m
-[32m+[m[32m            queryParams.database_id = sodularClient.currentDatabaseId;[m
-[32m+[m[32m        }[m
-[32m+[m[41m        [m
-[32m+[m[32m        const url = buildApiUrl(sodularClient.baseUrl, '/files/download', buildQueryParams(queryParams));[m
-[32m+[m[41m        [m
-[32m+[m[32m        try {[m
-[32m+[m[32m            const headers: HeadersInit = {};[m
-[32m+[m[32m            if (sodularClient.accessToken) {[m
-[32m+[m[32m                headers['Authorization'] = `Bearer ${sodularClient.accessToken}`;[m
-[32m+[m[32m            }[m
-[32m+[m
-[32m+[m[32m            const response = await fetch(url, { headers });[m
-[32m+[m
-[32m+[m[32m            if (!response.ok) {[m
-[32m+[m[32m                let errorJson;[m
-[32m+[m[32m                try {[m
-[32m+[m[32m                    errorJson = await response.json();[m
-[32m+[m[32m                } catch (e) {[m
-[32m+[m[32m                    // Not a JSON error[m
-[32m+[m[32m                }[m
-[32m+[m[32m                throw new Error(errorJson?.error || `Request failed with status ${response.status}`);[m
-[32m+[m[32m            }[m
-[32m+[m
-[32m+[m[32m            if (!response.body) {[m
-[32m+[m[32m                throw new Error('Response body is null');[m
-[32m+[m[32m            }[m
-[32m+[m
-[32m+[m[32m            const reader = response.body.getReader();[m
-[32m+[m[32m            const contentLength = +(response.headers.get('Content-Length') || 0);[m
-[32m+[m[32m            let receivedLength = 0;[m
-[32m+[m[32m            let index = 0;[m
-[32m+[m
-[32m+[m[32m            while (true) {[m
-[32m+[m[32m                const { done, value } = await reader.read();[m
-[32m+[m[32m                if (done) break;[m
-[32m+[m
-[32m+[m[32m                receivedLength += value.length;[m
-[32m+[m[32m                const percentage = contentLength > 0 ? Math.round((receivedLength / contentLength) * 100) : 0;[m
-[32m+[m[32m                const chunkData = options.type === 'arraybuffer' ? value.buffer : new Blob([value]);[m
-[32m+[m
-[32m+[m[32m                onDataCallback({[m
-[32m+[m[32m                    data: chunkData,[m
-[32m+[m[32m                    chunkSize: value.length,[m
-[32m+[m[32m                    index: index++,[m
-[32m+[m[32m                    total: contentLength,[m
-[32m+[m[32m                    percentage,[m
-[32m+[m[32m                });[m
-[32m+[m[32m            }[m
-[32m+[m
-[32m+[m[32m            onFinishCallback();[m
-[32m+[m[32m        } catch (error: any) {[m
-[32m+[m[32m            onErrorCallback(error);[m
-[32m+[m[32m        }[m
-[32m+[m[32m    })();[m
-[32m+[m
-[32m+[m[32m    return {[m
-[32m+[m[32m      onData: (cb) => { onDataCallback = cb; },[m
-[32m+[m[32m      onFinish: (cb) => { onFinishCallback = cb; },[m
-[32m+[m[32m      onError: (cb) => { onErrorCallback = cb; },[m
-[32m+[m[32m    };[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m
-[32m+[m[32m  async get(options: { filter: any; select?: any }): Promise<ApiResponse<FileSchema>> {[m
-[32m+[m[32m    return this.client.request('GET', '/files', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async query(options: QueryOptions): Promise<ApiResponse<{ list: FileSchema[]; total: number }>> {[m
-[32m+[m[32m    return this.client.request('GET', '/files/query', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async patch(filter: any, data: UpdateFileRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request('PATCH', '/files', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async delete(filter: any, options?: DeleteOptions): Promise<ApiResponse<DeleteResult>> {[m
-[32m+[m[32m    return this.client.request('DELETE', '/files', { params: { filter, options } });[m
-[32m+[m[32m  }[m
-[32m+[m[32m}[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/index.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..992db87[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/index.ts[m
-[36m@@ -0,0 +1,9 @@[m
-[32m+[m[32m// Export all API modules[m
-[32m+[m[32mexport { BaseClient } from './base-client';[m
-[32m+[m[32mexport { AuthAPI } from './auth';[m
-[32m+[m[32mexport { DatabaseAPI } from './database';[m
-[32m+[m[32mexport { TablesAPI } from './tables';[m
-[32m+[m[32mexport { RefAPI } from './ref';[m
-[32m+[m[32mexport { StorageAPI } from './storage';[m
-[32m+[m[32mexport { BucketsAPI } from './buckets';[m
-[32m+[m[32mexport { FilesAPI } from './files';[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/ref/index.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/ref/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..f5dfdb4[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/ref/index.ts[m
-[36m@@ -0,0 +1,114 @@[m
-[32m+[m[32mimport { BaseClient } from '../base-client';[m
-[32m+[m[32mimport {[m
-[32m+[m[32m  ApiResponse,[m
-[32m+[m[32m  QueryOptions,[m
-[32m+[m[32m  QueryResult,[m
-[32m+[m[32m  CountResult,[m
-[32m+[m[32m  UpdateResult,[m
-[32m+[m[32m  DeleteResult,[m
-[32m+[m[32m  DeleteOptions,[m
-[32m+[m[32m  Ref,[m
-[32m+[m[32m  CreateRefRequest,[m
-[32m+[m[32m  UpdateRefRequest[m
-[32m+[m[32m} from '../../types/schema';[m
-[32m+[m
-[32m+[m[32mexport class RefAPI {[m
-[32m+[m[32m  private currentTableId?: string;[m
-[32m+[m[32m  private currentDatabaseId?: string;[m
-[32m+[m
-[32m+[m[32m  constructor(private client: BaseClient) {}[m
-[32m+[m
-[32m+[m[32m  from(tableId: string): this {[m
-[32m+[m[32m    this.currentTableId = tableId;[m
-[32m+[m[32m    // Get current database ID from client[m
-[32m+[m[32m    this.currentDatabaseId = (this.client as any).currentDatabaseId;[m
-[32m+[m[32m    return this;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  /**[m
-[32m+[m[32m   * Listen to events for the current table[m
-[32m+[m[32m   * @param event - Event name: 'created', 'replaced', 'patched', 'deleted'[m
-[32m+[m[32m   * @param callback - Callback function to handle the event[m
-[32m+[m[32m   */[m
-[32m+[m[32m  on(event: 'created' | 'replaced' | 'patched' | 'deleted', callback: (data: any) => void): this {[m
-[32m+[m[32m    if (!this.currentTableId) {[m
-[32m+[m[32m      throw new Error('Table ID is required. Use from(tableId) first.');[m
-[32m+[m[32m    }[m
-[32m+[m
-[32m+[m[32m    // Join the channel for this table[m
-[32m+[m[32m    this.client.joinChannel(this.currentDatabaseId, this.currentTableId);[m
-[32m+[m[41m    [m
-[32m+[m[32m    // Listen to the specific event[m
-[32m+[m[32m    this.client.on(event, callback);[m
-[32m+[m[41m    [m
-[32m+[m[32m    return this;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  /**[m
-[32m+[m[32m   * Stop listening to events for the current table[m
-[32m+[m[32m   */[m
-[32m+[m[32m  off(event?: 'created' | 'replaced' | 'patched' | 'deleted'): this {[m
-[32m+[m[32m    if (!this.currentTableId) {[m
-[32m+[m[32m      throw new Error('Table ID is required. Use from(tableId) first.');[m
-[32m+[m[32m    }[m
-[32m+[m
-[32m+[m[32m    if (event) {[m
-[32m+[m[32m      this.client.off(event);[m
-[32m+[m[32m    } else {[m
-[32m+[m[32m      // Remove all event listeners[m
-[32m+[m[32m      this.client.off('created');[m
-[32m+[m[32m      this.client.off('replaced');[m
-[32m+[m[32m      this.client.off('patched');[m
-[32m+[m[32m      this.client.off('deleted');[m
-[32m+[m[32m    }[m
-[32m+[m
-[32m+[m[32m    // Leave the channel[m
-[32m+[m[32m    this.client.leaveChannel(this.currentDatabaseId, this.currentTableId);[m
-[32m+[m[41m    [m
-[32m+[m[32m    return this;[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  private checkTableId() {[m
-[32m+[m[32m    if (!this.currentTableId) {[m
-[32m+[m[32m      throw new Error('Table ID is required. Use from(tableId) first.');[m
-[32m+[m[32m    }[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async create(data: CreateRefRequest): Promise<ApiResponse<Ref>> {[m
-[32m+[m[32m    this.checkTableId();[m
-[32m+[m[32m    return this.client.request<Ref>('POST', '/ref', {[m
-[32m+[m[32m      params: { table_id: this.currentTableId },[m
-[32m+[m[32m      data[m
-[32m+[m[32m    });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async get(options: { filter: Record<string, any>; select?: string[] }): Promise<ApiResponse<Ref>> {[m
-[32m+[m[32m    this.checkTableId();[m
-[32m+[m[32m    return this.client.request<Ref>('GET', '/ref', { params: { ...options, table_id: this.currentTableId } });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async query(options: QueryOptions): Promise<ApiResponse<QueryResult<Ref>>> {[m
-[32m+[m[32m    this.checkTableId();[m
-[32m+[m[32m    return this.client.request<QueryResult<Ref>>('GET', '/ref/query', { params: { ...options, table_id: this.currentTableId } });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async count(options: { filter?: Record<string, any> }): Promise<ApiResponse<CountResult>> {[m
-[32m+[m[32m    this.checkTableId();[m
-[32m+[m[32m    return this.client.request<CountResult>('GET', '/ref/count', { params: { ...options, table_id: this.currentTableId } });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async put(filter: Record<string, any>, data: UpdateRefRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    this.checkTableId();[m
-[32m+[m[32m    return this.client.request<UpdateResult>('PUT', '/ref', { params: { filter, table_id: this.currentTableId }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async patch(filter: Record<string, any>, data: UpdateRefRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    this.checkTableId();[m
-[32m+[m[32m    return this.client.request<UpdateResult>('PATCH', '/ref', { params: { filter, table_id: this.currentTableId }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async delete(filter: Record<string, any>, options?: DeleteOptions): Promise<ApiResponse<DeleteResult>> {[m
-[32m+[m[32m    this.checkTableId();[m
-[32m+[m[32m    return this.client.request<DeleteResult>('DELETE', '/ref', { params: { filter, options, table_id: this.currentTableId } });[m
-[32m+[m[32m  }[m
-[32m+[m[32m}[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/storage/index.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/storage/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..539989a[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/storage/index.ts[m
-[36m@@ -0,0 +1,36 @@[m
-[32m+[m[32mimport { BaseClient } from '../base-client';[m
-[32m+[m[32mimport {[m
-[32m+[m[32m  StorageSchema,[m
-[32m+[m[32m  CreateStorageRequest,[m
-[32m+[m[32m  UpdateStorageRequest,[m
-[32m+[m[32m} from '../../types/schema/storage.schema';[m
-[32m+[m[32mimport { ApiResponse, QueryOptions, CountResult, UpdateResult, DeleteResult, DeleteOptions } from '../../types/schema';[m
-[32m+[m
-[32m+[m[32mexport class StorageAPI {[m
-[32m+[m[32m  constructor(private client: BaseClient) {}[m
-[32m+[m
-[32m+[m[32m  async create(data: CreateStorageRequest): Promise<ApiResponse<StorageSchema>> {[m
-[32m+[m[32m    return this.client.request('POST', '/storage', { data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async get(options: { filter: Record<string, any>; select?: string[] }): Promise<ApiResponse<StorageSchema>> {[m
-[32m+[m[32m    return this.client.request('GET', '/storage', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async query(options: QueryOptions): Promise<ApiResponse<{ list: StorageSchema[]; total: number }>> {[m
-[32m+[m[32m    return this.client.request('GET', '/storage/query', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async patch(filter: any, data: UpdateStorageRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request('PATCH', '/storage', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async put(filter: any, data: UpdateStorageRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request('PUT', '/storage', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async delete(filter: any, options?: DeleteOptions): Promise<ApiResponse<DeleteResult>> {[m
-[32m+[m[32m    console.log('StorageAPI.delete called with filter:', filter, 'options:', options, new Error().stack);[m
-[32m+[m[32m    return this.client.request('DELETE', '/storage', { params: { filter, options } });[m
-[32m+[m[32m  }[m
-[32m+[m[32m}[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/api/tables/index.ts b/dallosh/clients/dallosh_web/src/lib/sodular/api/tables/index.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..0c7f3bf[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/api/tables/index.ts[m
-[36m@@ -0,0 +1,51 @@[m
-[32m+[m[32mimport { BaseClient } from '../base-client';[m
-[32m+[m[32mimport {[m
-[32m+[m[32m  ApiResponse,[m
-[32m+[m[32m  QueryOptions,[m
-[32m+[m[32m  QueryResult,[m
-[32m+[m[32m  CountResult,[m
-[32m+[m[32m  UpdateResult,[m
-[32m+[m[32m  DeleteResult,[m
-[32m+[m[32m  DeleteOptions,[m
-[32m+[m[32m  Table,[m
-[32m+[m[32m  CreateTableRequest,[m
-[32m+[m[32m  UpdateTableRequest[m
-[32m+[m[32m} from '../../types/schema';[m
-[32m+[m
-[32m+[m[32mexport class TablesAPI {[m
-[32m+[m[32m  constructor(private client: BaseClient) {}[m
-[32m+[m
-[32m+[m[32m  async exists(tableId: string): Promise<ApiResponse<{ exists: boolean }>> {[m
-[32m+[m[32m    return this.client.request<{ exists: boolean }>('GET', '/tables/exists', {[m
-[32m+[m[32m      params: { table_id: tableId }[m
-[32m+[m[32m    });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async create(data: CreateTableRequest): Promise<ApiResponse<Table>> {[m
-[32m+[m[32m    return this.client.request<Table>('POST', '/tables', { data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async get(options: { filter: Record<string, any>; select?: string[] }): Promise<ApiResponse<Table>> {[m
-[32m+[m[32m    return this.client.request<Table>('GET', '/tables', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async query(options: QueryOptions): Promise<ApiResponse<QueryResult<Table>>> {[m
-[32m+[m[32m    return this.client.request<QueryResult<Table>>('GET', '/tables/query', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async count(options: { filter?: Record<string, any> }): Promise<ApiResponse<CountResult>> {[m
-[32m+[m[32m    return this.client.request<CountResult>('GET', '/tables/count', { params: options });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async put(filter: Record<string, any>, data: UpdateTableRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request<UpdateResult>('PUT', '/tables', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async patch(filter: Record<string, any>, data: UpdateTableRequest): Promise<ApiResponse<UpdateResult>> {[m
-[32m+[m[32m    return this.client.request<UpdateResult>('PATCH', '/tables', { params: { filter }, data });[m
-[32m+[m[32m  }[m
-[32m+[m
-[32m+[m[32m  async delete(filter: Record<string, any>, options?: DeleteOptions): Promise<ApiResponse<DeleteResult>> {[m
-[32m+[m[32m    return this.client.request<DeleteResult>('DELETE', '/tables', { params: { filter, options } });[m
-[32m+[m[32m  }[m
-[32m+[m[32m}[m
-[1mdiff --git a/dallosh/clients/dallosh_web/src/lib/sodular/examples/socket-usage.ts b/dallosh/clients/dallosh_web/src/lib/sodular/examples/socket-usage.ts[m
-[1mnew file mode 100644[m
-[1mindex 0000000..07d69a2[m
-[1m--- /dev/null[m
-[1m+++ b/dallosh/clients/dallosh_web/src/lib/sodular/examples/socket-usage.ts[m
-[36m@@ -0,0 +1,107 @@[m
-[32m+[m[32m/**[m[41m[m
-[32m+[m[32m * Example: Using Socket Events with RefAPI[m[41m[m
-[32m+[m[32m * This demonstrates how to listen to real-time events when refs are created, updated, or deleted[m[41m[m
-[32m+[m[32m */[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32mimport { SodularClient } from '../index';[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32masync function exampleSocketUsage() {[m[41m[m
-[32m+[m[32m  // Initialize the client[m[41m[m
-[32m+[m[32m  const client = SodularClient({[m[41m[m
-[32m+[m[32m    baseUrl: 'http://localhost:5001/api/v1'[m[41m[m
-[32m+[m[32m  });[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Connect to the server[m[41m[m
-[32m+[m[32m  const { isReady, error, client: sodularClient } = await client.connect();[m[41m[m
-[32m+[m[41m  [m
-[32m+[m[32m  if (!isReady) {[m[41m[m
-[32m+[m[32m    console.error('Failed to connect:', error);[m[41m[m
-[32m+[m[32m    return;[m[41m[m
-[32m+[m[32m  }[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Set database context[m[41m[m
-[32m+[m[32m  sodularClient.use('your-database-id');[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // set token[m[41m [m
-[32m+[m[32m  sodularClient.setToken('your-token');[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Listen to events for a specific table[m[41m[m
-[32m+[m[32m  const tableId = 'your-table-id';[m[41m[m
-[32m+[m[41m  [m
-[32m+[m[32m  // Listen to ref creation events[m[41m[m
-[32m+[m[32m  sodularClient.ref.from(tableId).on('created', (data) => {[m[41m[m
-[32m+[m[32m    console.log('New ref created:', data);[m[41m[m
-[32m+[m[32m  });[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Listen to ref update events (replaced)[m[41m[m
-[32m+[m[32m  sodularClient.ref.from(tableId).on('replaced', (data) => {[m[41m[m
-[32m+[m[32m    console.log('Ref replaced:', data);[m[41m[m
-[32m+[m[32m  });[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Listen to ref update events (patched)[m[41m[m
-[32m+[m[32m  sodularClient.ref.from(tableId).on('patched', (data) => {[m[41m[m
-[32m+[m[32m    console.log('Ref patched:', data);[m[41m[m
-[32m+[m[32m  });[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Listen to ref deletion events[m[41m[m
-[32m+[m[32m  sodularClient.ref.from(tableId).on('deleted', (data) => {[m[41m[m
-[32m+[m[32m    console.log('Ref deleted:', data);[m[41m[m
-[32m+[m[32m  });[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Alternative: Use the client directly for global events[m[41m[m
-[32m+[m[32m  sodularClient.on('created', (data) => {[m[41m[m
-[32m+[m[32m    console.log('Global created event:', data);[m[41m[m
-[32m+[m[32m  });[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Join a specific channel manually[m[41m[m
-[32m+[m[32m  sodularClient.joinChannel('your-database-id', 'your-table-id');[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Later, you can stop listening to specific events[m[41m[m
-[32m+[m[32m  sodularClient.ref.from(tableId).off('created');[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Or stop listening to all events for a table[m[41m[m
-[32m+[m[32m  sodularClient.ref.from(tableId).off();[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m  // Leave a channel manually[m[41m[m
-[32m+[m[32m  sodularClient.leaveChannel('your-database-id', 'your-table-id');[m[41m[m
-[32m+[m[32m}[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m// Example with error handling[m[41m[m
-[32m+[m[32masync function exampleWithErrorHandling() {[m[41m[m
-[32m+[m[32m  try {[m[41m[m
-[32m+[m[32m    const client = SodularClient({[m[41m[m
-[32m+[m[32m      baseUrl: 'http://localhost:5001/api/v1'[m[41m[m
-[32m+[m[32m    });[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m    const { isReady, error, client: sodularClient } = await client.connect();[m[41m[m
-[32m+[m[41m    [m
-[32m+[m[32m    if (!isReady) {[m[41m[m
-[32m+[m[32m      throw new Error(`Connection failed: ${error}`);[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[41m[m
-[32m+[m[32m    // Set up event listeners[m[41m[m
-[32m+[m[32m    const tableId = 'users-table';[m[41m[m
-[32m+[m[41m    [m
-[32m+[m[32m    sodularClient.ref.from(tableId)[m[41m[m
-[32m+[m[32m      .on('created', (data) => {[m[41m[m
-[32m+[m[32m        console.log('User created:', data);[m[41m[m
-[32m+[m[32m        // Handle new user creation[m[41m[m
-[32m+[m[32m      })[m[41m[m
-[32m+[m[32m      .on('updated', (data) => {[m[41m[m
-[32m+[m[32m        console.log('User updated:', d

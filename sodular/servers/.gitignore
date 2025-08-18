@@ -29,8 +29,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# System libraries (but not project src/lib folders)
+/lib/
+/lib64/
 parts/
 sdist/
 var/
