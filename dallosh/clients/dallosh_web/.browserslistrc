@@ -1,0 +1,10 @@
+# Browser compatibility targets
+> 1%
+last 2 versions
+not dead
+Android >= 4.4
+iOS >= 9
+Chrome >= 49
+Firefox >= 52
+Safari >= 10
+Edge >= 14 

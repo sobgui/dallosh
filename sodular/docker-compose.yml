@@ -1,0 +1,68 @@
+
+services:
+  sodular_mongodb:
+    image: mongo:6.0
+    container_name: sodular_mongodb
+    restart: always
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./servers/sodular_mongodb/data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root123
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - sodular_net1
+
+  sodular_server:
+    image: sodular/backend:0.1.0
+    build:
+      context: ./servers/sodular_server
+      network: host
+    container_name: sodular_server
+    restart: always
+    ports:
+      - "5005:5005"
+    volumes:
+      - ./servers/sodular_server/storage:/app/storage
+    env_file:
+      - ./servers/sodular_server/.env
+    depends_on:
+      sodular_mongodb:
+        condition: service_healthy
+    networks:
+      - sodular_net1
+
+
+
+  sodular_web:
+    image: sodular/web:0.1.0
+    build:
+      context: ./clients/sodular_web
+      network: host
+    container_name: sodular_web
+    restart: always
+    ports:
+      - "3004:3004"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - ./clients/sodular_web/.env
+    depends_on:
+      - sodular_server
+    networks:
+      - sodular_net1
+
+
+
+
+networks:
+  sodular_net1:
+    driver: bridge
+

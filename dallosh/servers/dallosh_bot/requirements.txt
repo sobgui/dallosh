@@ -1,0 +1,9 @@
+pipecat-ai[webrtc,silero,openai,runner, websocket, mcp, google, rime, noisereduce, local-smart-turn]>=0.0.77
+dotenv
+loguru
+fastapi
+uvicorn
+
+aiohttp>=3.8.0
+python-socketio>=5.7.0
+typing-extensions>=4.0.0
