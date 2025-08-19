@@ -290,7 +290,7 @@ Main classes for Dallosh:
 ```ts
 import { SodularClient, SodularClientInstance, Ref, Table, User } from '@/lib/sodular';
 
-const sodularClientFactory = SodularClient({ baseUrl: apiUrl, ai: { baseUrl: aiUrl } });
+const sodularClientFactory = SodularClient({ baseUrl: apiUrl, });
 const { client, isReady, error } = await sodularClientFactory.connect();
 if (error || !isReady) {
 console.error("Failed to connect to Sodular backend:", error);
