@@ -98,3 +98,5 @@ Thumbs.db
 
 # Docker
 .dockerignore
+
+servers/sodular_mongodb/data/
