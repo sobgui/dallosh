@@ -21,7 +21,7 @@ services:
       - sodular_net1
 
   sodular_server:
-    image: sodular/backend:0.1.0
+    image: sodular/server:0.1.0
     build:
       context: ./servers/sodular_server
       network: host
