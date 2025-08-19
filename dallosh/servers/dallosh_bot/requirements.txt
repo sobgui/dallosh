@@ -1,5 +1,5 @@
 # pipecat-ai[webrtc,silero,openai,runner, websocket, mcp, google, rime, noisereduce, local-smart-turn]>=0.0.77
-pipecat-ai[webrtc, openai, runner, websocket, mcp, google, rime, noisereduce]>=0.0.77
+pipecat-ai[webrtc, silero, openai, runner, websocket, mcp, google, rime, noisereduce]>=0.0.77
 dotenv
 loguru
 fastapi
