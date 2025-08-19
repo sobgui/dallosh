@@ -115,6 +115,7 @@ Visit the Sodular admin interface at: **http://localhost:3004**
 - **Email**: `root@sodular.com`
 - **Password**: `root@123`
 
+
 ### Step 3: Set Up Database for Dallosh
 
 Follow these steps in the Sodular admin interface to create a new database for Dallosh:
@@ -254,6 +255,7 @@ python main.py  # For Python servers
 
 Create `.env.local` files in each project directory with your local configuration.
 
+
 ## 🌟 Features
 
 ### Dallosh Chatbot
@@ -269,6 +271,65 @@ Create `.env.local` files in each project directory with your local configuratio
 - **API Gateway**: RESTful API for data operations
 - **Real-time Updates**: WebSocket support for live data
 - **Scalable Architecture**: Built for enterprise workloads
+
+### Diagram Classes
+
+Main classes for Dallosh:
+
+- 'users' : { uid, data:{email, password, username, field:{}, createAt, udatedAt}
+- 'posts': {uid, data:{}, }  # a post belongs to users
+- 'comments': {uid, data:{}}  # a comment belong to post by user
+- 'chat': {uid, data:{}, }  # a chat session has messages
+- 'messages': {uid, data:{}} 
+- 'requests' : {uid, data:{}}
+
+### For Developers API using Sodular SDK client for services:
+
+`./dallosh/clients/dallosh_web/src/services/client.ts`
+
+```ts
+import { SodularClient, SodularClientInstance, Ref, Table, User } from '@/lib/sodular';
+
+const sodularClientFactory = SodularClient({ baseUrl: apiUrl, ai: { baseUrl: aiUrl } });
+const { client, isReady, error } = await sodularClientFactory.connect();
+if (error || !isReady) {
+console.error("Failed to connect to Sodular backend:", error);
+return null;
+}
+
+if (databaseID) client.use(databaseID);
+
+// client.setToken(token);
+
+const result  = await client.auth.login({data:{email, password}}) // client.auth.register({})
+
+//Check if table exists
+
+const tableResult = await client.tables.get({filter:{'data.name':'posts'}}) // like mongodb
+
+if(tableResult.data.data.name) {
+
+}
+
+// create a Table
+const tableResult = await client.tables.create({data:{name:'posts'}})
+
+// Work with documents
+
+const documentResult = await client.ref.from(tableResult.data.uid).create({data:{...object}})
+
+const documentResult = await client.ref.from(tableResult.data.uid).get({filter:{'data.[key]':value}}) // return object
+
+//get many 
+
+const documentResult = await client.ref.from(tableResult.data.uid).query({filter:{'data.[key]':value}}) // return {list:[]}
+
+// list events
+
+await client.ref.from(tableResult.data.uid).on('created', callback) // 'created', 'replaced', 'patched', 'deleted'
+
+
+````
 
 ## 🤝 Contributing
 
