@@ -1,9 +1,15 @@
-pipecat-ai[webrtc,silero,openai,runner, websocket, mcp, google, rime, noisereduce, local-smart-turn]>=0.0.77
+# pipecat-ai[webrtc,silero,openai,runner, websocket, mcp, google, rime, noisereduce, local-smart-turn]>=0.0.77
+pipecat-ai[webrtc, openai, runner, websocket, mcp, google, rime, noisereduce]>=0.0.77
 dotenv
 loguru
 fastapi
 uvicorn
 
+# Linux-specific audio/video processing dependencies
 aiohttp>=3.8.0
 python-socketio>=5.7.0
 typing-extensions>=4.0.0
+pyaudio>=0.2.11
+soundfile>=0.12.1
+librosa>=0.10.0
+numpy>=1.21.0

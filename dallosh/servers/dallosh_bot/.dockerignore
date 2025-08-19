@@ -125,7 +125,9 @@ __tests__/
 .eslintrc*
 .prettierrc*
 .babelrc*
-tsconfig.json
 jest.config.js
 
 models/
+vllm_models/
+venv
+.venv

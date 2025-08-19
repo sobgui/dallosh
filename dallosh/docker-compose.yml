@@ -1,28 +1,28 @@
 
 services:
-  dallosh_bot:
-    image: dallosh/bot:0.1.0
-    build:
-      context: ./servers/dallosh_bot
-      network: host
-    container_name: dallosh_bot
-    restart: always
-    ports:
-      - "7860:7860"
-    volumes:
-      - ./servers/dallosh_bot/models:/app/models
-    env_file:
-      - ./servers/dallosh_bot/.env
-    networks:
-      - dallosh_net
-    extra_hosts:  # we should this as sometimes linux does not expose host.docker.internal by default
-      - "host.docker.internal:172.17.0.1"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
-      interval: 60s
-      timeout: 30s
-      retries: 5
-      start_period: 300s
+  # dallosh_bot:
+  #   image: dallosh/bot:0.1.0
+  #   build:
+  #     context: ./servers/dallosh_bot
+  #     network: host
+  #   container_name: dallosh_bot
+  #   restart: always
+  #   ports:
+  #     - "7860:7860"
+  #   volumes:
+  #     - ./servers/dallosh_bot/models:/app/models
+  #   env_file:
+  #     - ./servers/dallosh_bot/.env
+  #   networks:
+  #     - dallosh_net
+  #   extra_hosts:  # we should this as sometimes linux does not expose host.docker.internal by default
+  #     - "host.docker.internal:172.17.0.1"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
+  #     interval: 60s
+  #     timeout: 30s
+  #     retries: 5
+  #     start_period: 300s
 
   dallosh_functions:
     image: dallosh/functions:0.1.0
@@ -33,34 +33,31 @@ services:
     restart: always
     env_file:
       - ./servers/dallosh_functions/.env
-    depends_on:
-      dallosh_bot:
-        condition: service_healthy
     networks:
       - dallosh_net
     extra_hosts:
       - "sodular_server:172.17.0.1"
 
-  dallosh_web:
-    image: dallosh/web:0.1.0
-    build:
-      context: ./clients/dallosh_web
-      network: host
-    container_name: dallosh_web
-    restart: always
-    ports:
-      - "3005:3005"
-    env_file:
-      - ./clients/dallosh_web/.env
-    depends_on:
-      dallosh_bot:
-        condition: service_healthy
-      dallosh_functions:
-        condition: service_started
-    networks:
-      - dallosh_net
-    extra_hosts:
-      - "sodular_server:172.17.0.1"
+  # dallosh_web:
+  #   image: dallosh/web:0.1.0
+  #   build:
+  #     context: ./clients/dallosh_web
+  #     network: host
+  #   container_name: dallosh_web
+  #   restart: always
+  #   ports:
+  #     - "3005:3005"
+  #   env_file:
+  #     - ./clients/dallosh_web/.env
+  #   depends_on:
+  #     # dallosh_bot:
+  #     #   condition: service_healthy
+  #     dallosh_functions:
+  #       condition: service_started
+  #   networks:
+  #     - dallosh_net
+  #   extra_hosts:
+  #     - "sodular_server:172.17.0.1"
 
 networks:
   dallosh_net:

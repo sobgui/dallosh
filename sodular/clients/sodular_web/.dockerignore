@@ -74,7 +74,6 @@ dist
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -125,5 +124,4 @@ __tests__/
 .eslintrc*
 .prettierrc*
 .babelrc*
-tsconfig.json
 jest.config.js 

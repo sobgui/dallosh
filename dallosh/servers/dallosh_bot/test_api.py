@@ -42,7 +42,7 @@ async def test_sodular_client_basic():
         print(f"✅ Database context set to: {test_db_id}")
         
         # Test setToken method
-        test_token = os.getenv('SODULAR_TEST_TOKEN', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiIxMTg1YmU1OC00YTMzLTRiN2YtYjgwNy03NmU5Y2NiODZjMDUiLCJlbWFpbCI6ImJvdEBkYWxsb3NoLmNvbSIsInVzZXJuYW1lIjoiZnJlZSIsImlhdCI6MTc1NTEwNDY3Mn0.zHvT8Q5ctQ7ECyOMS6McLMUF3rIk3hXcBlbOHWh1Jw0')
+        test_token = os.getenv('SODULAR_TEST_TOKEN', 'test_token')
         client.setToken(test_token)
         print(f"✅ Token set: {test_token[:10]}...")
         

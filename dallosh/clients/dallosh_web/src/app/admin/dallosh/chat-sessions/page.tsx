@@ -126,9 +126,11 @@ export default function ChatSessionsPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    console.log('🚀 Admin page component mounted, initializing...');
     initializeTables();
     setupChatSessionListeners();
     return () => {
+      console.log('🧹 Admin page component unmounting, cleaning up...');
       // Cleanup listeners
       listeners.forEach(listener => {
         if (listener && typeof listener.unsubscribe === 'function') {
@@ -142,41 +144,230 @@ export default function ChatSessionsPage() {
   const setupChatSessionListeners = async () => {
     try {
       const client = await getSodularClient();
-      if (!client) return;
+      if (!client) {
+        console.warn('⚠️ No Sodular client available for chat session listeners');
+        return;
+      }
 
       // Get or create chat table
       let chatTable = await client.tables.get({ filter: { 'data.name': 'chat' } });
-      if (!chatTable.data) return;
+      if (!chatTable.data) {
+        console.warn('⚠️ No chat table available for real-time listeners');
+        return;
+      }
 
       console.log('🔔 Setting up real-time chat session listeners for admin...');
 
       // Listen for new chat sessions
       const createListener = client.ref.from(chatTable.data.uid).on('created', (data: any) => {
         console.log('💬 New chat session received in real-time for admin:', data);
-        setSessions(prev => {
-          // Check if session already exists
-          const exists = prev.some(session => session.uid === data.uid);
-          if (exists) return prev;
-          return [data, ...prev];
-        });
+        
+        try {
+          // Handle different data structures
+          let sessionData = data;
+          
+          // Log the actual data structure for debugging
+          console.log('🔍 New chat session data structure analysis:', {
+            hasData: !!data,
+            hasDataData: !!(data && data.data),
+            hasList: !!(data && data.list),
+            listLength: data && data.list ? data.list.length : 0,
+            dataKeys: data ? Object.keys(data) : [],
+            dataType: typeof data
+          });
+          
+          if (data && data.list && data.list.length > 0) {
+            // Data comes as {list: Array(1), total: 1} - extract the first item
+            sessionData = data.list[0];
+          } else if (data && data.data) {
+            // Data comes as {data: {...}} - use the data property
+            sessionData = data;
+          } else if (data && typeof data === 'object' && data.uid) {
+            // Data comes as direct session object
+            sessionData = data;
+          } else {
+            // Unknown data structure
+            sessionData = null;
+          }
+          
+          console.log('🔍 Processed new sessionData:', sessionData);
+          
+          // Safety check: if sessionData is null, skip processing
+          if (!sessionData) {
+            console.warn('⚠️ sessionData is null, skipping processing');
+            return;
+          }
+          
+          if (sessionData && sessionData.uid) {
+            console.log('✅ Valid new session data, adding to sessions');
+            
+            // Handle different data structures for the session data
+            let sessionToAdd = sessionData;
+            if (sessionData.data) {
+              // sessionData has a nested data property, use the whole object
+              sessionToAdd = sessionData;
+            } else if (sessionData.fields) {
+              // sessionData has fields property, create proper structure
+              sessionToAdd = { ...sessionData, data: sessionData.fields };
+            } else {
+              // sessionData is the direct session object
+              sessionToAdd = sessionData;
+            }
+            
+            setSessions(prev => {
+              // Check if session already exists
+              const exists = prev.some(session => session.uid === sessionToAdd.uid);
+              if (exists) return prev;
+              return [sessionToAdd, ...prev];
+            });
+          } else {
+            console.warn('⚠️ Invalid new session data structure:', { 
+              data, 
+              sessionData,
+              hasSessionData: !!sessionData,
+              hasUID: !!(sessionData && sessionData.uid)
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error processing new chat session:', error, { data });
+        }
       });
 
       // Listen for chat session updates
       const updateListener = client.ref.from(chatTable.data.uid).on('patched', (data: any) => {
         console.log('📝 Chat session updated in real-time for admin:', data);
-        setSessions(prev => prev.map(session => 
-          session.uid === data.uid ? { ...session, data: { ...session.data, ...data.data } } : session
-        ));
+        
+        try {
+          // Handle different data structures
+          let sessionData = data;
+          
+          // Log the actual data structure for debugging
+          console.log('🔍 Chat session update data structure analysis:', {
+            hasData: !!data,
+            hasDataData: !!(data && data.data),
+            hasList: !!(data && data.list),
+            listLength: data && data.list ? data.list.length : 0,
+            dataKeys: data ? Object.keys(data) : [],
+            dataType: typeof data
+          });
+          
+          if (data && data.list && data.list.length > 0) {
+            // Data comes as {list: Array(1), total: 1} - extract the first item
+            sessionData = data.list[0];
+          } else if (data && data.data) {
+            // Data comes as {data: {...}} - use the data property
+            sessionData = data;
+          } else if (data && typeof data === 'object' && data.uid) {
+            // Data comes as direct session object
+            sessionData = data;
+          } else {
+            // Unknown data structure
+            sessionData = null;
+          }
+          
+          console.log('🔍 Processed sessionData:', sessionData);
+          
+          // Safety check: if sessionData is null, skip processing
+          if (!sessionData) {
+            console.warn('⚠️ sessionData is null, skipping processing');
+            return;
+          }
+          
+          if (sessionData && sessionData.uid) {
+            console.log('✅ Valid session update data, updating sessions');
+            
+            // Handle different data structures for the session data
+            let sessionUpdateData = {};
+            if (sessionData.data) {
+              // sessionData has a nested data property
+              sessionUpdateData = sessionData.data;
+            } else if (sessionData.fields) {
+              // sessionData has fields property (direct session object)
+              sessionUpdateData = sessionData.fields;
+            } else {
+              // sessionData is the direct session object
+              sessionUpdateData = sessionData;
+            }
+            
+            setSessions(prev => prev.map(session => 
+              session.uid === sessionData.uid ? { ...session, data: { ...session.data, ...sessionUpdateData } } : session
+            ));
+            
+            // If this is the currently selected session, update it too
+            if (selectedSession && selectedSession.uid === sessionData.uid) {
+              setSelectedSession(prev => prev ? { ...prev, data: { ...prev.data, ...sessionUpdateData } } : null);
+            }
+          } else {
+            console.warn('⚠️ Invalid session update data structure:', { 
+              data, 
+              sessionData,
+              hasSessionData: !!sessionData,
+              hasUID: !!(sessionData && sessionData.uid)
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error processing chat session update:', error, { data });
+        }
       });
 
       // Listen for chat session deletions
       const deleteListener = client.ref.from(chatTable.data.uid).on('deleted', (data: any) => {
         console.log('🗑️ Chat session deleted in real-time for admin:', data);
-        setSessions(prev => prev.filter(session => session.uid !== data.uid));
-        // If deleted session was selected, clear selection
-        if (selectedSession?.uid === data.uid) {
-          setSelectedSession(null);
-          setMessages([]);
+        
+        try {
+          // Handle different data structures
+          let sessionData = data;
+          
+          // Log the actual data structure for debugging
+          console.log('🔍 Chat session delete data structure analysis:', {
+            hasData: !!data,
+            hasDataData: !!(data && data.data),
+            hasList: !!(data && data.list),
+            listLength: data && data.list ? data.list.length : 0,
+            dataKeys: data ? Object.keys(data) : [],
+            dataType: typeof data
+          });
+          
+          if (data && data.list && data.list.length > 0) {
+            // Data comes as {list: Array(1), total: 1} - extract the first item
+            sessionData = data.list[0];
+          } else if (data && data.data) {
+            // Data comes as {data: {...}} - use the data property
+            sessionData = data;
+          } else if (data && typeof data === 'object' && data.uid) {
+            // Data comes as direct session object
+            sessionData = data;
+          } else {
+            // Unknown data structure
+            sessionData = null;
+          }
+          
+          console.log('🔍 Processed delete sessionData:', sessionData);
+          
+          // Safety check: if sessionData is null, skip processing
+          if (!sessionData) {
+            console.warn('⚠️ sessionData is null, skipping processing');
+            return;
+          }
+          
+          if (sessionData && sessionData.uid) {
+            console.log('✅ Valid delete session data, removing from sessions');
+            setSessions(prev => prev.filter(session => session.uid !== sessionData.uid));
+            // If deleted session was selected, clear selection
+            if (selectedSession?.uid === sessionData.uid) {
+              setSelectedSession(null);
+              setMessages([]);
+            }
+          } else {
+            console.warn('⚠️ Invalid delete session data structure:', { 
+              data, 
+              sessionData,
+              hasSessionData: !!sessionData,
+              hasUID: !!(sessionData && sessionData.uid)
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error processing chat session deletion:', error, { data });
         }
       });
 
@@ -198,10 +389,27 @@ export default function ChatSessionsPage() {
   };
 
   useEffect(() => {
-    if (selectedSession) {
+    if (selectedSession && tableUIDs.messages) {
+      console.log('🔄 Session selected, setting up real-time listeners:', {
+        sessionId: selectedSession.uid,
+        messagesTableUID: tableUIDs.messages
+      });
       fetchMessages(selectedSession.uid);
       setupRealtimeListeners(selectedSession.uid);
+    } else if (selectedSession && !tableUIDs.messages) {
+      console.log('⚠️ Session selected but messages table not ready yet');
     }
+    
+    // Cleanup function to remove listeners when dependencies change
+    return () => {
+      console.log('🧹 Cleaning up real-time listeners for session change');
+      listeners.forEach(listener => {
+        if (listener && typeof listener.unsubscribe === 'function') {
+          listener.unsubscribe();
+        }
+      });
+      setListeners([]);
+    };
   }, [selectedSession, tableUIDs.messages]);
 
   useEffect(() => {
@@ -344,7 +552,17 @@ export default function ChatSessionsPage() {
   };
 
   const setupRealtimeListeners = async (sessionId: string) => {
-    if (!tableUIDs.messages) return;
+    if (!tableUIDs.messages) {
+      console.warn('⚠️ No messages table UID available');
+      return;
+    }
+    
+    if (!sessionId) {
+      console.warn('⚠️ No session ID provided');
+      return;
+    }
+
+    console.log('🔧 Setting up real-time listeners for session:', sessionId);
 
     // Cleanup existing listeners
     listeners.forEach(listener => {
@@ -354,30 +572,116 @@ export default function ChatSessionsPage() {
     });
 
     const client = await getSodularClient();
-    if (!client) return;
+    if (!client) {
+      console.warn('⚠️ No Sodular client available');
+      return;
+    }
 
     // Listen for new messages in this session
     const messageListener = client.ref.from(tableUIDs.messages).on('created', (data: any) => {
-      if (data.data.chatId === sessionId) {
-        setMessages(prev => {
-          // Check if message already exists to prevent duplicates
-          const exists = prev.some(msg => msg.uid === data.uid);
-          if (exists) return prev;
-          return [...prev, data];
+      console.log('📨 New message event received:', { data, sessionId });
+      
+      try {
+        // Handle different data structures
+        let messageData = data;
+        
+        // Log the actual data structure for debugging
+        console.log('🔍 Data structure analysis:', {
+          hasData: !!data,
+          hasDataData: !!(data && data.data),
+          hasList: !!(data && data.list),
+          listLength: data && data.list ? data.list.length : 0,
+          dataKeys: data ? Object.keys(data) : [],
+          dataType: typeof data
         });
+        
+        if (data && data.data) {
+          messageData = data;
+        } else if (data && data.list && data.list.length > 0) {
+          messageData = data.list[0];
+        } else if (data && typeof data === 'object') {
+          // Handle case where data might be the direct message object
+          messageData = data;
+        }
+        
+        console.log('🔍 Processed messageData:', messageData);
+        
+        if (messageData && messageData.data && messageData.data.chatId === sessionId) {
+          console.log('✅ Valid message data, updating messages');
+          setMessages(prev => {
+            // Check if message already exists to prevent duplicates
+            const exists = prev.some(msg => msg.uid === messageData.uid);
+            if (exists) return prev;
+            return [...prev, messageData];
+          });
+        } else {
+          console.warn('⚠️ Invalid message data structure:', { 
+            data, 
+            messageData, 
+            sessionId,
+            hasMessageData: !!messageData,
+            hasMessageDataData: !!(messageData && messageData.data),
+            hasChatId: !!(messageData && messageData.data && messageData.data.chatId),
+            chatIdMatch: messageData && messageData.data ? messageData.data.chatId === sessionId : false
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error processing new message:', error, { data, sessionId });
       }
     });
 
     // Listen for message updates
     const updateListener = client.ref.from(tableUIDs.messages).on('patched', (data: any) => {
-      if (data.data.chatId === sessionId) {
-        setMessages(prev => prev.map(msg => 
-          msg.uid === data.uid ? { ...msg, data: { ...msg.data, ...data.data } } : msg
-        ));
+      console.log('📝 Message update event received:', { data, sessionId });
+      
+      try {
+        // Handle different data structures
+        let messageData = data;
+        
+        // Log the actual data structure for debugging
+        console.log('🔍 Update data structure analysis:', {
+          hasData: !!data,
+          hasDataData: !!(data && data.data),
+          hasList: !!(data && data.list),
+          listLength: data && data.list ? data.list.length : 0,
+          dataKeys: data ? Object.keys(data) : [],
+          dataType: typeof data
+        });
+        
+        if (data && data.data) {
+          messageData = data;
+        } else if (data && data.list && data.list.length > 0) {
+          messageData = data.list[0];
+        } else if (data && typeof data === 'object') {
+          // Handle case where data might be the direct message object
+          messageData = data;
+        }
+        
+        console.log('🔍 Processed update messageData:', messageData);
+        
+        if (messageData && messageData.data && messageData.data.chatId === sessionId) {
+          console.log('✅ Valid message update data, updating messages');
+          setMessages(prev => prev.map(msg => 
+            msg.uid === messageData.uid ? { ...msg, data: { ...msg.data, ...messageData.data } } : msg
+          ));
+        } else {
+          console.warn('⚠️ Invalid message update data structure:', { 
+            data, 
+            messageData, 
+            sessionId,
+            hasMessageData: !!messageData,
+            hasMessageDataData: !!(messageData && messageData.data),
+            hasChatId: !!(messageData && messageData.data && messageData.data.chatId),
+            chatIdMatch: messageData && messageData.data ? messageData.data.chatId === sessionId : false
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error processing message update:', error, { data, sessionId });
       }
     });
 
     setListeners([messageListener, updateListener]);
+    console.log('✅ Real-time listeners set up successfully for session:', sessionId);
   };
 
   const handleJoinSession = async (session: ChatSession) => {
