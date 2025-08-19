@@ -297,11 +297,31 @@ console.error("Failed to connect to Sodular backend:", error);
 return null;
 }
 
+// Use existing database
 if (databaseID) client.use(databaseID);
 
 // client.setToken(token);
 
 const result  = await client.auth.login({data:{email, password}}) // client.auth.register({})
+
+//----------------- (optional)
+
+// get the uid of an existing database
+
+const databaseResult = await client.database.get({filter:{'data.name':'dallosh'}}) // like mongodb
+
+const databaseId =  databaseResult.data.uid
+
+// create database dynamically
+
+const databaseResult = await client.database.create({name:'dallosh'})
+
+const databaseId =  databaseResult.data.uid
+
+// if you created dynamically ou have to set it again with .use()
+// if (databaseID) client.use(databaseID);
+
+//----------------- (optional)
 
 //Check if table exists
 
