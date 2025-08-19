@@ -314,7 +314,7 @@ const databaseId =  databaseResult.data.uid
 
 // create database dynamically
 
-const databaseResult = await client.database.create({name:'dallosh'})
+const databaseResult = await client.database.create({data:{name:'dallosh'}})
 
 const databaseId =  databaseResult.data.uid
 
