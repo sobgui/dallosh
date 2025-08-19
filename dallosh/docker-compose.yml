@@ -38,26 +38,26 @@ services:
     extra_hosts:
       - "sodular_server:172.17.0.1"
 
-  # dallosh_web:
-  #   image: dallosh/web:0.1.0
-  #   build:
-  #     context: ./clients/dallosh_web
-  #     network: host
-  #   container_name: dallosh_web
-  #   restart: always
-  #   ports:
-  #     - "3005:3005"
-  #   env_file:
-  #     - ./clients/dallosh_web/.env
-  #   depends_on:
-  #     # dallosh_bot:
-  #     #   condition: service_healthy
-  #     dallosh_functions:
-  #       condition: service_started
-  #   networks:
-  #     - dallosh_net
-  #   extra_hosts:
-  #     - "sodular_server:172.17.0.1"
+  dallosh_web:
+    image: dallosh/web:0.1.0
+    build:
+      context: ./clients/dallosh_web
+      network: host
+    container_name: dallosh_web
+    restart: always
+    ports:
+      - "3005:3005"
+    env_file:
+      - ./clients/dallosh_web/.env
+    depends_on:
+      # dallosh_bot:
+      #   condition: service_healthy
+      dallosh_functions:
+        condition: service_started
+    networks:
+      - dallosh_net
+    extra_hosts:
+      - "sodular_server:172.17.0.1"
 
 networks:
   dallosh_net:
