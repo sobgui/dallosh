@@ -114,7 +114,7 @@ from pipecat.transcriptions.language import Language
 from pipecat.audio.filters.noisereduce_filter import NoisereduceFilter
 
 from pipecat.audio.turn.smart_turn.base_smart_turn import SmartTurnParams
-from pipecat.audio.turn.smart_turn.local_smart_turn_v2 import LocalSmartTurnAnalyzerV2
+# from pipecat.audio.turn.smart_turn.local_smart_turn_v2 import LocalSmartTurnAnalyzerV2
 
 
 from .tools import get_tools_schema, set_tools_functions

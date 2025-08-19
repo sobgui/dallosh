@@ -26,7 +26,6 @@ Have your API keys ready. We'll add them to your `.env` shortly.
 
 ## Setup
 
-
 1. Set up a virtual environment
 
 From the `pipecat-quickstart` directory, run:
@@ -54,7 +53,6 @@ cd models
 git lfs install
 git clone https://huggingface.co/pipecat-ai/smart-turn
 ```
-
 
 > Using `uv`? Install requirements using: `uv pip install -r requirements.txt`.
 
@@ -88,11 +86,59 @@ python bot.py
 
 > 💡 First run note: The initial startup may take ~10 seconds as Pipecat downloads required models, like the Silero VAD model.
 
+## Linux-Specific WebRTC Configuration
+
+If you're running this on Linux and want external machines to connect via WebRTC, you need to configure your firewall to allow the required ports:
+
+### Required Ports for WebRTC
+
+```bash
+# Main application port
+sudo ufw allow 7860
+
+# STUN/TURN server ports (required for WebRTC NAT traversal)
+sudo ufw allow 3478/tcp
+sudo ufw allow 3478/udp
+sudo ufw allow 5349/tcp
+sudo ufw allow 5349/udp
+```
+
+### Why These Ports?
+
+- **Port 7860**: Main application server
+- **Port 3478**: STUN/TURN protocol (UDP for media, TCP for signaling)
+- **Port 5349**: STUN/TURN over TLS (secure WebRTC connections)
+
+### Verify Firewall Status
+
+```bash
+sudo ufw status
+```
+
+You should see all the above ports listed as "ALLOW Anywhere".
+
+### Test External Connectivity
+
+To test if external machines can connect:
+
+1. Find your Linux machine's IP address:
+   ```bash
+   hostname -I
+   ```
+
+2. From another machine on the same network, try accessing:
+   ```
+   http://YOUR_LINUX_IP:7860
+   ```
+
+3. If HTTP works but WebRTC doesn't, check that all the STUN/TURN ports are open.
+
 ## Troubleshooting
 
 - **Browser permissions**: Make sure to allow microphone access when prompted by your browser.
 - **Connection issues**: If the WebRTC connection fails, first try a different browser. If that fails, make sure you don't have a VPN or firewall rules blocking traffic. WebRTC uses UDP to communicate.
 - **Audio issues**: Check that your microphone and speakers are working and not muted.
+- **Linux external access**: Ensure all required WebRTC ports (7860, 3478, 5349) are open in your firewall. See the Linux-specific section above.
 
 ## Next Steps
 

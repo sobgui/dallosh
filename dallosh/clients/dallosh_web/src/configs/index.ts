@@ -7,7 +7,7 @@ function getLocal(key: string, fallback: string) {
 }
   
 // Always get en variable with NEXT_PUBLIC_ prefix
-export const apiUrl = getLocal('sodular_base_url', process.env.NEXT_PUBLIC_SODULAR_BASE_URL || 'http://192.168.1.117:5005/api/v1');
-export const aiUrl = getLocal('sodular_ai_base_url', process.env.NEXT_PUBLIC_SODULAR_AI_BASE_URL || 'http://192.168.1.117:4200/api/v1');
+export const apiUrl = getLocal('sodular_base_url', process.env.NEXT_PUBLIC_SODULAR_BASE_URL || 'http://localhost:5005/api/v1');
+export const aiUrl = getLocal('sodular_ai_base_url', process.env.NEXT_PUBLIC_SODULAR_AI_BASE_URL || 'http://localhost:4200/api/v1');
 export const databaseID = getLocal('sodular_database_id', process.env.NEXT_PUBLIC_SODULAR_DATABASE_ID || 'bb3312c2-bb52-4506-be36-76b30d7b71cc');
-export const dalloshAIBaseUrl = getLocal('dallosh_ai_base_url', process.env.NEXT_PUBLIC_DALLOSH_AI_BASE_URL || 'http://192.168.1.117:7860');
+export const dalloshAIBaseUrl = getLocal('dallosh_ai_base_url', process.env.NEXT_PUBLIC_DALLOSH_AI_BASE_URL || 'http://localhost:7860');

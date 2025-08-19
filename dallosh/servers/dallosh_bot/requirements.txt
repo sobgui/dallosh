@@ -13,3 +13,6 @@ pyaudio>=0.2.11
 soundfile>=0.12.1
 librosa>=0.10.0
 numpy>=1.21.0
+
+# netifaces 
+# requests

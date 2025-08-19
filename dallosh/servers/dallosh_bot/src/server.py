@@ -29,10 +29,19 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-# Configure ICE servers for NAT traversal
+# Configure ICE servers for NAT traversal - improved for external network access
 ice_servers = [
     IceServer(urls="stun:stun.l.google.com:19302"),
+    IceServer(urls="stun:stun1.l.google.com:19302"),
+    IceServer(urls="stun:stun2.l.google.com:19302"),
+    IceServer(urls="stun:stun3.l.google.com:19302"),
+    IceServer(urls="stun:stun4.l.google.com:19302"),
 ]
+
+# Add logging for WebRTC connections
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @app.post("/api/offer")
 async def handle_offer(request: dict, background_tasks: BackgroundTasks, request_obj: Request):
@@ -79,13 +88,27 @@ async def handle_offer(request: dict, background_tasks: BackgroundTasks, request
 
         if pc_id and pc_id in connections:
             # Handle reconnections
-            print(f"Reconnecting existing peer: {pc_id}")
+            logger.info(f"Reconnecting existing peer: {pc_id}")
             webrtc_connection = connections[pc_id]
             await webrtc_connection.renegotiate(sdp=sdp, type=type)
         else:
             # Create new WebRTC connection
-            print(f"Creating new peer connection")
+            logger.info(f"Creating new peer connection")
             webrtc_connection = SmallWebRTCConnection(ice_servers=ice_servers)
+            
+            # Add connection event handlers for debugging
+            @webrtc_connection.event_handler("connected")
+            async def on_connected(connection):
+                logger.info(f"WebRTC connection established: {connection.pc_id}")
+                
+            @webrtc_connection.event_handler("ice_connection_state_changed")
+            async def on_ice_state_changed(connection, state):
+                logger.info(f"ICE connection state changed: {state} for {connection.pc_id}")
+                
+            @webrtc_connection.event_handler("ice_gathering_state_changed")
+            async def on_ice_gathering_changed(connection, state):
+                logger.info(f"ICE gathering state changed: {state} for {connection.pc_id}")
+                
             await webrtc_connection.initialize(sdp=sdp, type=type)
 
             # Clean up when client disconnects

@@ -1,28 +1,35 @@
 
 services:
-  # dallosh_bot:
-  #   image: dallosh/bot:0.1.0
-  #   build:
-  #     context: ./servers/dallosh_bot
-  #     network: host
-  #   container_name: dallosh_bot
-  #   restart: always
-  #   ports:
-  #     - "7860:7860"
-  #   volumes:
-  #     - ./servers/dallosh_bot/models:/app/models
-  #   env_file:
-  #     - ./servers/dallosh_bot/.env
-  #   networks:
-  #     - dallosh_net
-  #   extra_hosts:  # we should this as sometimes linux does not expose host.docker.internal by default
-  #     - "host.docker.internal:172.17.0.1"
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
-  #     interval: 60s
-  #     timeout: 30s
-  #     retries: 5
-  #     start_period: 300s
+  dallosh_bot:
+    image: dallosh/bot:0.1.0
+    build:
+      context: ./servers/dallosh_bot
+      network: host
+    container_name: dallosh_bot
+    restart: always
+    ports:
+      # Main application port
+      - "7860:7860"
+      # STUN/TURN protocol ports (required for WebRTC NAT traversal)
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+      - "5349:5349/tcp"
+      - "5349:5349/udp"
+    volumes:
+      - ./servers/dallosh_bot/models:/app/models
+    env_file:
+      - ./servers/dallosh_bot/.env
+    networks:
+      - dallosh_net
+    extra_hosts:  # we should this as sometimes linux does not expose host.docker.internal by default
+      - "host.docker.internal:172.17.0.1"
+    # Simplified health check - just check if the process is running
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "python.*main.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   dallosh_functions:
     image: dallosh/functions:0.1.0
@@ -50,8 +57,8 @@ services:
     env_file:
       - ./clients/dallosh_web/.env
     depends_on:
-      # dallosh_bot:
-      #   condition: service_healthy
+      dallosh_bot:
+        condition: service_started  # Changed from service_healthy to service_started
       dallosh_functions:
         condition: service_started
     networks:
