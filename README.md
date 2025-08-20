@@ -76,15 +76,26 @@ CORS_ORIGIN=http://localhost:3004
 ```
 
 #### Sodular Client Environment
-Create `.env` file in `./sodular/clients/sodular_web/`:
+Create `.env.production` or `.env.local` file in `./sodular/clients/sodular_web/`:
 
-```bash
-# API Configuration
-NEXT_PUBLIC_SODULAR_BASE_URL=http://localhost:5005/api/v1
-NEXT_PUBLIC_SODULAR_AI_BASE_URL=http://localhost:4200/api/v1
-```
 
 #### Update Sodular Client Configuration
+
+`.env.production` when on prod mode 
+```env
+# Production Configuration
+
+NEXT_PUBLIC_SODULAR_BASE_URL=http://localhost:5005/api/v1
+```
+
+`.env.local` (only when on dev mode without Docker)
+```env
+# Development Configuration
+NODE_ENV=development
+NEXT_PUBLIC_SODULAR_BASE_URL=http://localhost:5005/api/v1
+```
+
+OR directly <br>
 Update the base URL in `./sodular/clients/sodular_web/src/configs/index.ts`:
 
 ```typescript
@@ -177,19 +188,37 @@ DALLOSH_AI_BASE_URL=http://localhost:7860
 ```
 
 #### Dallosh Client Environment
-Create `.env` file in `./dallosh/clients/dallosh_web/`:
+Create `.env.production` or `.env.local`  file in `./dallosh/clients/dallosh_web/`:
 
+
+#### Update Dallosh Client Configuration
+
+`.env.production`
 ```bash
 # Sodular Configuration
 NEXT_PUBLIC_SODULAR_BASE_URL=http://localhost:5005/api/v1
-NEXT_PUBLIC_SODULAR_AI_BASE_URL=http://localhost:4200/api/v1
+
+# Get your database ID from Sodular Admin Dashboard
 NEXT_PUBLIC_SODULAR_DATABASE_ID=YOUR_DATABASE_ID_HERE
 
 # Dallosh AI Configuration
 NEXT_PUBLIC_DALLOSH_AI_BASE_URL=http://localhost:7860
 ```
 
-#### Update Dallosh Client Configuration
+`.env.local` (only when on dev mode without Docker)
+```bash
+# Sodular Configuration
+NEXT_PUBLIC_SODULAR_BASE_URL=http://localhost:5005/api/v1
+
+# Get your database ID from Sodular Admin Dashboard
+NEXT_PUBLIC_SODULAR_DATABASE_ID=YOUR_DATABASE_ID_HERE
+
+# Dallosh AI Configuration
+NEXT_PUBLIC_DALLOSH_AI_BASE_URL=http://localhost:7860
+```
+
+OR directly <br>
+
 Update the configuration in `./dallosh/clients/dallosh_web/src/configs/index.ts`:
 
 ```typescript
