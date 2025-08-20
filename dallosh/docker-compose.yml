@@ -55,7 +55,7 @@ services:
     ports:
       - "3005:3005"
     env_file:
-      - ./clients/dallosh_web/.env
+      - ./clients/dallosh_web/.env.production
     depends_on:
       dallosh_bot:
         condition: service_started  # Changed from service_healthy to service_started

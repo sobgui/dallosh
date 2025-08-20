@@ -53,7 +53,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     env_file:
-      - ./clients/sodular_web/.env
+      - ./clients/sodular_web/.env.production
     depends_on:
       - sodular_server
     networks:
