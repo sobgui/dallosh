@@ -67,7 +67,8 @@ RUN mkdir -p /app/models
 # Port 7860: Main application server
 # Port 3478: STUN/TURN protocol (UDP for media, TCP for signaling)
 # Port 5349: STUN/TURN over TLS (secure WebRTC connections)
-EXPOSE 7860 3478/tcp 3478/udp 5349/tcp 5349/udp
+# Ports 32768-65535: Full WebRTC dynamic range (based on your logs)
+EXPOSE 7860 3478/tcp 3478/udp 5349/tcp 5349/udp 32768-65535/udp 32768-65535/tcp
 
 # Use the start script instead of direct python execution
 # CMD ["/app/start.sh"]

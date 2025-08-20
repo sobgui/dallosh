@@ -7,22 +7,27 @@ services:
       network: host
     container_name: dallosh_bot
     restart: always
-    ports:
-      # Main application port
-      - "7860:7860"
-      # STUN/TURN protocol ports (required for WebRTC NAT traversal)
-      - "3478:3478/tcp"
-      - "3478:3478/udp"
-      - "5349:5349/tcp"
-      - "5349:5349/udp"
+    network_mode: "host"  # Use host network directly
+    # Remove all ports mapping when using host network
+    # ports:
+    #   # Main application port
+    #   - "7860:7860"
+    #   # STUN/TURN protocol ports (required for WebRTC NAT traversal)
+    #   - "3478:3478/tcp"
+    #   - "3478:3478/udp"
+    #   - "5349:5349/tcp"
+    #   - "5349:5349/udp"
+    # #   # WebRTC media ports (smaller, focused range)
+    #   - "32768-65535:32768-65535/udp"  # Full dynamic range
+    #   - "32768-65535:32768-65535/tcp"  # Full dynamic range
     volumes:
       - ./servers/dallosh_bot/models:/app/models
     env_file:
       - ./servers/dallosh_bot/.env
-    networks:
-      - dallosh_net
-    extra_hosts:  # we should this as sometimes linux does not expose host.docker.internal by default
-      - "host.docker.internal:172.17.0.1"
+    # networks:
+    #   - dallosh_net
+    # extra_hosts:  # we should this as sometimes linux does not expose host.docker.internal by default
+    #   - "host.docker.internal:172.17.0.1"
     # Simplified health check - just check if the process is running
     healthcheck:
       test: ["CMD", "pgrep", "-f", "python.*main.py"]

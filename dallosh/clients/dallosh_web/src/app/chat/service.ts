@@ -1018,7 +1018,11 @@ export class VoiceManager {
 
     try {
       const transport = new SmallWebRTCTransport({
-        iceServers: [],
+        // Optional configuration for the transport
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          
+        ],
       });
 
       console.log('🎤 Creating PipecatClient with enableMic: false (disabled by default)');
@@ -1552,7 +1556,8 @@ export class VoiceManager {
 
       // Connect to the server with session data in URL (EXACT from reference)
       await this.pcClient.connect({
-        connectionUrl: `${serverBaseUrl}/api/offer?${queryParams.toString()}`
+        //connectionUrl: `${serverBaseUrl}/api/offer?${queryParams.toString()}`
+        webrtcUrl: `${serverBaseUrl}/api/offer?${queryParams.toString()}`
       });
 
       console.log('Pipecat connection established');

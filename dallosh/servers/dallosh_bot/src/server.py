@@ -36,6 +36,9 @@ ice_servers = [
     IceServer(urls="stun:stun2.l.google.com:19302"),
     IceServer(urls="stun:stun3.l.google.com:19302"),
     IceServer(urls="stun:stun4.l.google.com:19302"),
+
+    # Add your host machine as STUN server
+    
 ]
 
 # Add logging for WebRTC connections
@@ -94,7 +97,11 @@ async def handle_offer(request: dict, background_tasks: BackgroundTasks, request
         else:
             # Create new WebRTC connection
             logger.info(f"Creating new peer connection")
-            webrtc_connection = SmallWebRTCConnection(ice_servers=ice_servers)
+            webrtc_connection = SmallWebRTCConnection(
+                ice_servers=ice_servers,
+                # Force external IP for SDP generation
+               
+            )
             
             # Add connection event handlers for debugging
             @webrtc_connection.event_handler("connected")

@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 
-
 const nextConfig = {
   /* config options here */
   typescript: {
@@ -89,10 +88,8 @@ const nextConfig = {
   },
   // Environment variables configuration
   // env: {
-  //   NEXT_PUBLIC_SODULAR_BASE_URL: process.env.NEXT_PUBLIC_SODULAR_BASE_URL || 'http://host.docker.internal:5005/api/v1',
-  //   NEXT_PUBLIC_SODULAR_AI_BASE_URL: process.env.NEXT_PUBLIC_SODULAR_AI_BASE_URL || 'http://host.docker.internal:4200/api/v1',
-  //   NEXT_PUBLIC_SODULAR_DATABASE_ID: process.env.NEXT_PUBLIC_SODULAR_DATABASE_ID || 'd8d1badd-d3bd-48ce-863b-44c0ebdca41d',
-  //   NEXT_PUBLIC_DALLOSH_AI_BASE_URL: process.env.NEXT_PUBLIC_DALLOSH_AI_BASE_URL || 'http://host.docker.internal:7860',
+  //   NEXT_PUBLIC_SODULAR_BASE_URL: process.env.NEXT_PUBLIC_SODULAR_BASE_URL || 'http://localhost:5005/api/v1',
+  //   NEXT_PUBLIC_SODULAR_AI_BASE_URL: process.env.NEXT_PUBLIC_SODULAR_AI_BASE_URL || 'http://localhost:4200/api/v1',
   // },
 };
 
