@@ -168,6 +168,14 @@ Follow these steps in the Sodular admin interface to create a new database for D
 
 ### Step 4: Set Up Dallosh Environment Variables
 
+For Linux OS, allow some ports range for Webrtc :
+
+```
+sudo ufw allow 49152:65535/tcp
+sudo ufw allow 49152:65535/udp
+
+```
+
 Now configure the environment variables for Dallosh services:
 
 #### Dallosh Bot Environment
