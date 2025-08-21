@@ -90,7 +90,7 @@ const nextConfig = {
   // env: {
   //   NEXT_PUBLIC_SODULAR_BASE_URL: process.env.NEXT_PUBLIC_SODULAR_BASE_URL || 'http://localhost:5005/api/v1',
   //   NEXT_PUBLIC_SODULAR_AI_BASE_URL: process.env.NEXT_PUBLIC_SODULAR_AI_BASE_URL || 'http://localhost:4200/api/v1',
-  //   NEXT_PUBLIC_SODULAR_DATABASE_ID: process.env.NEXT_PUBLIC_SODULAR_DATABASE_ID || 'bb3312c2-bb52-4506-be36-76b30d7b71cc',
+  //   NEXT_PUBLIC_DALLOSH_DATABASE_ID: process.env.NEXT_PUBLIC_DALLOSH_DATABASE_ID || 'bb3312c2-bb52-4506-be36-76b30d7b71cc',
   //   NEXT_PUBLIC_DALLOSH_AI_BASE_URL: process.env.NEXT_PUBLIC_DALLOSH_AI_BASE_URL || 'http://localhost:7860',
   // },
 };
