@@ -32,10 +32,10 @@ app.add_middleware(
 # Configure ICE servers for NAT traversal - improved for external network access
 ice_servers = [
     IceServer(urls="stun:stun.l.google.com:19302"),
-    IceServer(urls="stun:stun1.l.google.com:19302"),
-    IceServer(urls="stun:stun2.l.google.com:19302"),
-    IceServer(urls="stun:stun3.l.google.com:19302"),
-    IceServer(urls="stun:stun4.l.google.com:19302"),
+    # IceServer(urls="stun:stun1.l.google.com:19302"),
+    # IceServer(urls="stun:stun2.l.google.com:19302"),
+    # IceServer(urls="stun:stun3.l.google.com:19302"),
+    # IceServer(urls="stun:stun4.l.google.com:19302"),
 
     # Add your host machine as STUN server
     

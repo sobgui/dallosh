@@ -790,8 +790,8 @@ async def run_agent(webrtc_connection, data = {}):
     """Main bot entry point for the bot starter."""
 
     # Optional: Path to the local Smart Turn model
-    smart_turn_model_path = os.getenv("LOCAL_SMART_TURN_MODEL_PATH")
-    model_path_exists = os.path.exists(smart_turn_model_path)
+    # smart_turn_model_path = os.getenv("LOCAL_SMART_TURN_MODEL_PATH")
+    # model_path_exists = os.path.exists(smart_turn_model_path)
 
     transport = SmallWebRTCTransport(
         params=TransportParams(
